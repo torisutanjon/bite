@@ -219,11 +219,63 @@ See `docs/ai/react-hooks-conventions.md` for detailed guide.
 - **No conditional hooks** — always call at the top level of the component
 - **No data fetching in `useEffect`** — use TanStack Query hooks instead
 
+## Design System
+
+### Color Palette
+
+| Token | CSS Variable | Tailwind Class | Hex | Usage |
+|-------|-------------|----------------|-----|-------|
+| Primary | `--brand` | `text-brand` / `bg-brand` | `#FF4F18` | CTAs, active states, highlights |
+| Secondary | `--secondary` | `text-secondary` / `bg-secondary` | `#1A1A1A` | Headings, inverted UI |
+| Tertiary / Surface | `--surface-alt` | `bg-surface-alt` | `#F9F9F9` | Section backgrounds |
+| Neutral | `--neutral` | `text-neutral` | `#6B7280` | Muted text, borders |
+
+**Never hardcode hex values.** Always use the CSS variable aliases via Tailwind utilities.
+
+The Radix `<Theme>` uses `accentColor="tomato"` (closest Radix palette to `#FF4F18`). Use `color="tomato"` on Radix components (Button, Badge, etc.) when the brand primary color is needed.
+
+### Typography
+
+| Role | Font | Variable | Usage |
+|------|------|----------|-------|
+| Headline | Be Vietnam Pro | `font-accent` | Section headings, display text |
+| Body | Hanken Grotesk | `font-main` | Paragraphs, labels, UI text |
+
+`font-main` (Hanken Grotesk) is applied globally on `body`. Apply `font-accent` (Be Vietnam Pro) to prominent headings. Heading HTML elements (`h1`–`h6`) automatically inherit `font-accent` via the global CSS rule.
+
+### Buttons
+
+All buttons use **pill / rounded-full** shape per design system:
+
+```tsx
+// Primary CTA
+<Button color="tomato" className="rounded-full">Find Food</Button>
+
+// Outlined
+<Button variant="outline" className="rounded-full">Learn More</Button>
+
+// Inverted (dark background)
+<Button variant="solid" className="rounded-full !bg-secondary !text-white">Sign In</Button>
+```
+
+### Search Input
+
+Search inputs use a **pill-shaped white container** wrapping a borderless `TextField.Root` + a `rounded-full` Button:
+
+```tsx
+<Flex align="center" className="rounded-full bg-white p-1.5 shadow-xl gap-1">
+  <TextField.Root variant="soft" className="flex-1 !bg-transparent !shadow-none !ring-0 !border-0" />
+  <Button color="tomato" className="rounded-full px-6">Search</Button>
+</Flex>
+```
+
+---
+
 ## Styling & Theming
 
 See `docs/ai/styling-and-theming.md` for detailed guide.
 
-- **CSS variables for theme colors** — defined in `tailwind.config.ts`, never hardcode hex values
+- **CSS variables for theme colors** — defined in `globals.css`, never hardcode hex values
 - **Radix UI theme tokens first** — use component props for color/size/variant
 - **Tailwind utilities second** — for layout, spacing, custom styling
 - **Fonts** — `font-main` and `font-accent` only, never import fonts directly
@@ -300,3 +352,378 @@ See `docs/ai/error-handling.md` for detailed guide.
 ❌ Logging PHI to Rollbar → use error codes and non-PHI context
 ❌ Empty catch blocks → log to Rollbar, return error response
 ❌ Direct `fetch()` in client components → use TanStack Query hooks
+
+---
+
+## Folder Structure
+
+Follows Next.js 15 App Router conventions. Server Components are the default — only add `'use client'` when the component needs state, effects, browser APIs, event handlers that update UI, or TanStack Query hooks. Extract the smallest possible island as Client Component; keep the outer shell as Server Component.
+
+```
+app/
+  (marketing)/                    ← Route group: public/landing pages (no auth required)
+    page.tsx                      ← Landing page (Server Component)
+    layout.tsx                    ← Marketing layout
+  (dashboard)/                    ← Route group: authenticated user pages
+    layout.tsx                    ← Auth-protected layout (includes Navbar)
+    stores/
+      page.tsx                    ← Restaurant listing (Server Component)
+      [id]/
+        page.tsx                  ← Restaurant detail (Server Component)
+    orders/
+      page.tsx                    ← Order history (Server Component)
+      [id]/
+        page.tsx                  ← Order detail with realtime ('use client')
+    offers/
+      page.tsx                    ← Offers listing (Server Component)
+  auth/                           ← Auth routes (no Navbar, own layout)
+    login/
+    sign-up/
+  actions/                        ← Server Actions — one file per domain, 'use server' at top
+    ordering.ts
+    restaurant.ts
+    payment.ts
+  components/
+    layout/                       ← Structural layout components
+      Navbar.tsx                  ← Server Component (static structure)
+      NavbarActions.tsx           ← 'use client' (cart count, mobile menu toggle)
+      Footer.tsx                  ← Server Component
+    sections/                     ← Full-page section components (one per landing/marketing section)
+      HeroSection/
+        index.tsx                 ← Server Component wrapper
+        SearchBar.tsx             ← 'use client' (controlled input + router.push)
+      PopularNearbySection.tsx    ← Server Component
+      FeaturesSection.tsx         ← Server Component
+      SignatureBitesSection.tsx   ← Server Component
+      AppDownloadBanner.tsx       ← Server Component
+    ui/                           ← Reusable presentational primitives
+      RestaurantCard.tsx          ← Server Component
+      FoodCard.tsx                ← Server Component
+      StarRating.tsx              ← Server Component
+    Form/                         ← Form input components (existing)
+
+lib/
+  domains/                        ← DDD bounded contexts (pure business logic, zero framework deps)
+    restaurant/
+      types.ts
+      repository.ts               ← Interface definition (IRestaurantRepository)
+      service.ts
+    ordering/
+      types.ts
+      repository.ts
+      service.ts
+      saga.ts                     ← Choreography saga handlers
+    delivery/
+    payment/
+    user/
+    notification/
+  infrastructure/                 ← Concrete implementations (Supabase, Kafka)
+    supabase/
+      repositories/               ← Implements domain repository interfaces
+    kafka/
+      producer.ts
+      consumers/
+        ordering/
+        delivery/
+        payment/
+  query/                          ← TanStack Query hooks
+    hooks/                        ← useFetch<Entity>, useUpdate<Entity>
+      use-fetch-restaurants.ts
+      use-fetch-orders.ts
+    README.md
+  hooks/                          ← Domain-specific custom React hooks
+    utils/                        ← Utility hooks
+  types/
+    supabase.ts                   ← Generated DB types (sync with schema)
+    events.ts                     ← Kafka DomainEvent<T> envelope types
+  supabase/
+    client.ts                     ← Client Component Supabase client
+    server.ts                     ← Server Component Supabase client
+    service.ts                    ← Admin (service role) client
+    middleware.ts                 ← Session refresh middleware
+  utils/
+    provider.ts                   ← buildProviderTree() helper
+    circuit-breaker.ts
+  rollbar/
+    index.ts
+  agents/                         ← Future agentic pipeline
+    fraud-detection/
+    route-optimization/
+    demand-forecast/
+    menu-recommendation/
+
+public/
+  images/
+    hero-bg.jpg
+    restaurants/
+    food/
+    app-mockup.png
+
+supabase/
+  migrations/                     ← All schema changes go here, never Studio in production
+```
+
+### Server vs Client Component Decision Rules
+
+Ask these questions in order — stop at first "yes":
+
+| Question                                                       | Answer →            |
+| -------------------------------------------------------------- | ------------------- |
+| Does it use `useState` / `useReducer`?                         | `'use client'`      |
+| Does it use `useEffect` / `useLayoutEffect`?                   | `'use client'`      |
+| Does it read `window`, `document`, `localStorage`?             | `'use client'`      |
+| Does it attach event listeners that mutate state?              | `'use client'`      |
+| Does it use a TanStack Query hook (`useFetch*`, `useUpdate*`)? | `'use client'`      |
+| Does it use React Context that wraps client state?             | `'use client'`      |
+| None of the above                                              | Server Component ✅ |
+
+**Extract minimally** — if only a button in a large card needs `onClick` state, extract just that button into a `*Actions.tsx` client file. Keep the card as Server Component.
+
+---
+
+## Food Delivery Domain Architecture
+
+This is a food delivery platform (similar to FoodPanda/GrabFood). The following principles and patterns are chosen to match the domain complexity and infrastructure stack (Next.js 15, self-hosted Supabase, Kafka, Kubernetes, future agentic pipeline).
+
+---
+
+### Core Coding Principles
+
+#### 1. Domain-Driven Design (DDD)
+
+Organize all code around the food delivery domain, not around technical concerns. Each **bounded context** owns its types, business rules, and data access.
+
+**Bounded Contexts:**
+
+| Context        | Responsibility                                   |
+| -------------- | ------------------------------------------------ |
+| `restaurant`   | Menus, categories, availability, operating hours |
+| `ordering`     | Cart, order lifecycle, order history             |
+| `delivery`     | Driver assignment, tracking, routing             |
+| `payment`      | Payment processing, refunds, wallet              |
+| `user`         | Customer profiles, saved addresses, preferences  |
+| `notification` | SMS/email/push dispatch                          |
+
+**Target folder structure:**
+
+```
+lib/
+  domains/
+    restaurant/   (types.ts, repository.ts, service.ts)
+    ordering/     (types.ts, repository.ts, service.ts, saga.ts)
+    delivery/
+    payment/
+    user/
+    notification/
+  infrastructure/
+    supabase/
+      repositories/   (concrete Supabase implementations)
+    kafka/
+      producer.ts
+      consumers/
+        ordering/
+        delivery/
+        payment/
+  agents/             (future agentic pipeline)
+```
+
+#### 2. SOLID Principles
+
+- **S** — Each module/class has one reason to change (`OrderService` only manages order logic, not payment or delivery)
+- **O** — Extend delivery fee strategies or payment providers via new classes, never by modifying existing ones
+- **L** — All concrete repositories and payment/notification providers must be substitutable for their interfaces
+- **I** — Interfaces segregated by use case (`IOrderReader` vs `IOrderWriter`, `IPaymentProcessor` vs `IRefundProcessor`)
+- **D** — Domain and application layers depend on abstractions (repository interfaces), never on Supabase or Kafka directly
+
+#### 3. Clean Architecture
+
+Three strict layers — inner layers must never import from outer layers:
+
+```
+Domain layer       (lib/domains/)         — pure business logic, zero framework deps
+Application layer  (app/actions/, lib/query/) — use cases, orchestration, Server Actions
+Infrastructure     (lib/infrastructure/)   — Supabase adapters, Kafka producers/consumers
+Presentation       (app/)                  — Next.js pages, components, Server Components
+```
+
+---
+
+### Design Patterns
+
+#### Repository Pattern (Data Access Abstraction)
+
+Every domain defines an interface. Infrastructure implements it via Supabase. This lets tests mock the DB and lets you swap storage without touching business logic.
+
+```typescript
+// lib/domains/ordering/repository.ts
+interface IOrderRepository {
+  findById(id: string): Promise<Order | null>
+  findByCustomer(customerId: string, pagination: Pagination): Promise<PaginatedResult<Order>>
+  save(order: Order): Promise<Order>
+}
+
+// lib/infrastructure/supabase/repositories/order-repository.ts
+class SupabaseOrderRepository implements IOrderRepository { ... }
+```
+
+#### Event-Driven Architecture + CQRS (via Kafka)
+
+**Commands** mutate state and emit Kafka domain events. **Queries** read from Supabase read-optimized views via TanStack Query. Never mix them.
+
+**Kafka topic naming convention** (`<domain>.<event>` in past tense):
+
+```
+orders.placed          orders.confirmed       orders.cancelled
+orders.ready-for-pickup orders.delivered
+delivery.driver-assigned delivery.picked-up   delivery.completed
+restaurant.opened      restaurant.closed      menu.updated
+payment.initiated      payment.succeeded      payment.failed
+notification.sms-sent  notification.email-sent
+```
+
+**Standard event envelope — all Kafka messages MUST follow this shape:**
+
+```typescript
+// lib/types/events.ts
+interface DomainEvent<T> {
+  id: string; // UUID — used for idempotency deduplication
+  traceId: string; // correlation ID across all services
+  type: string; // e.g. 'orders.placed'
+  version: number; // schema version for backward compatibility
+  timestamp: string; // ISO 8601
+  payload: T;
+}
+```
+
+**Kafka utilities:**
+
+- Producer: `lib/infrastructure/kafka/producer.ts`
+- Consumers: `lib/infrastructure/kafka/consumers/<domain>/` — all consumers **must be idempotent** (deduplicate by `event.id`)
+- Dead Letter Queue (DLQ): failed events go to `<topic>.dlq` — **never silently drop messages**
+
+#### Saga Pattern (Distributed Order Workflow)
+
+The order placement flow spans Restaurant → Payment → Delivery. Use **Choreography Saga** via Kafka events — no central orchestrator. Each service reacts to events and emits compensating events on failure.
+
+**Happy path:**
+
+```
+orders.placed
+  → Restaurant service:  orders.confirmed
+  → Payment service:     payment.succeeded
+  → Delivery service:    delivery.driver-assigned
+  → orders.ready-for-pickup → orders.delivered
+```
+
+**Compensation (rollback on failure):**
+
+```
+payment.failed → orders.cancelled → inventory.restored
+driver-assignment.failed → delivery.retry-or-cancel
+```
+
+Saga handlers live in `lib/domains/ordering/saga.ts`.
+
+#### Strategy Pattern (Swappable Algorithms & Providers)
+
+Use for anything that varies by config or business rule:
+
+- Delivery fee calculation (distance-based, flat-rate, surge pricing)
+- Payment providers (Stripe, GCash, COD, wallet)
+- Notification channels (SMS via Twilio, email via Resend, push)
+
+```typescript
+interface IDeliveryFeeStrategy {
+  calculate(params: DeliveryFeeParams): number
+}
+class DistanceBasedFeeStrategy implements IDeliveryFeeStrategy { ... }
+class SurgePricingFeeStrategy implements IDeliveryFeeStrategy { ... }
+```
+
+#### Circuit Breaker (K8s Resilience)
+
+Wrap all calls to external services (payment gateways, SMS, push notifications) with a circuit breaker. Prevents cascade failures when a downstream service is degraded.
+
+```typescript
+// lib/utils/circuit-breaker.ts — wrap unreliable external calls
+```
+
+In Kubernetes: configure liveness/readiness probes on all pods. Payment and notification services must not crash the ordering pod.
+
+#### Observer Pattern (Real-time Updates)
+
+Use **Supabase Realtime** subscriptions client-side for live order status (customers tracking orders, restaurant dashboards). Pair with Kafka events server-side — Kafka consumers update the DB, Supabase Realtime pushes the change to the browser.
+
+Enable Realtime **selectively** — only on tables that need it: `orders`, `order_status_history`, `driver_location`.
+
+---
+
+### Infrastructure Guidelines
+
+#### Kubernetes
+
+- Each bounded context is designed to split into an independent K8s Deployment in future microservices migration
+- Use `ConfigMap` for non-secret environment-specific config (Kafka brokers, Supabase URL)
+- Use `Secret` for credentials (Supabase service key, Kafka SASL credentials)
+- Health check route at `/api/health` (approved `/api` exception) for liveness/readiness probes
+- Apply Horizontal Pod Autoscaler (HPA) on order-processing consumers during peak hours
+- Kafka consumers run as separate K8s `Deployment` from the Next.js app
+
+#### Self-Hosted Supabase
+
+- Connection pooling via PgBouncer (included in self-hosted setup) — configure `SUPABASE_DB_URL` with pooler port
+- `SUPABASE_SERVICE_ROLE_KEY` only used in `lib/supabase/service.ts` — never exposed to client
+- All schema changes via migrations in `supabase/migrations/` — **never modify schema via Supabase Studio directly in production**
+- Enable Supabase Realtime selectively per table (see Observer Pattern above)
+- RLS policies required on all tables — wrap `auth.uid()` in `(select auth.uid())` for performance
+
+---
+
+### Future: Agentic Pipeline
+
+Design agent-ready infrastructure from the start so agents slot in without refactoring.
+
+#### Agent Design Principles
+
+- **Single-responsibility agents** — one concern per agent (`OrderRoutingAgent`, `FraudDetectionAgent`, `DemandForecastAgent`, `MenuRecommendationAgent`)
+- **Event-triggered** — agents are Kafka consumers that may also produce new events; they plug into the existing event bus with no app changes
+- **Stateless** — all agent state persisted in Supabase (K8s pods are ephemeral); no in-memory state between invocations
+- **Human-in-the-loop checkpoints** — for high-impact decisions (fraud holds, large refunds, driver blacklisting), agents emit a `review.required` event and pause — a human or approval workflow resolves it before the agent continues
+- **Observability first** — every agent action logged with `traceId` for full audit trail
+
+#### Agent Integration via Kafka (future topics)
+
+```
+orders.placed          → FraudDetectionAgent    → fraud.flagged / fraud.cleared
+delivery.driver-assigned → RouteOptimizationAgent → delivery.route-updated
+orders.delivered       → DemandForecastAgent    → demand.prediction-updated
+menu.updated           → MenuRecommendationAgent → recommendation.updated
+```
+
+#### Agent folder structure (future)
+
+```
+lib/
+  agents/
+    fraud-detection/
+    route-optimization/
+    demand-forecast/
+    menu-recommendation/
+```
+
+Each agent folder: `agent.ts` (core logic), `types.ts` (input/output event types), `__tests__/`.
+
+---
+
+### Architecture Decision Summary
+
+| Decision             | Choice                           | Reason                                                                                                      |
+| -------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Domain organization  | DDD Bounded Contexts             | Food delivery has rich, complex domain with clear subdomain boundaries                                      |
+| Data access          | Repository Pattern               | Decouples business logic from Supabase; enables mocking in tests                                            |
+| Order workflow       | Saga (Choreography)              | Distributed transaction across Restaurant/Payment/Delivery without a central coordinator                    |
+| Async communication  | Event-Driven + CQRS via Kafka    | Orders, delivery, and notifications are naturally async; CQRS allows independent scaling of reads vs writes |
+| Provider variability | Strategy Pattern                 | Multiple payment methods, fee models, and notification channels need to be swappable without code changes   |
+| Resilience           | Circuit Breaker                  | K8s pod crashes must not cascade; external service failures must be contained                               |
+| Real-time UX         | Observer via Supabase Realtime   | Low-latency order tracking without polling                                                                  |
+| Future AI            | Event-triggered stateless agents | Agents plug into Kafka with no architecture change; K8s-friendly ephemeral design                           |

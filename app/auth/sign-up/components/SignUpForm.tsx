@@ -9,7 +9,7 @@ import {
   EmailInput,
   PasswordInput,
   PhoneInput,
-} from "@/app/components/Form";
+} from "@/app/components/form";
 import { PersonIcon } from "@radix-ui/react-icons";
 import { TextField } from "@radix-ui/themes";
 
