@@ -8,7 +8,7 @@ import {
   ButtonWithLoading,
   EmailInput,
   PasswordInput,
-} from "@/app/components/Form";
+} from "@/app/components/form";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

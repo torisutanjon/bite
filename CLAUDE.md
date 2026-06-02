@@ -219,11 +219,63 @@ See `docs/ai/react-hooks-conventions.md` for detailed guide.
 - **No conditional hooks** — always call at the top level of the component
 - **No data fetching in `useEffect`** — use TanStack Query hooks instead
 
+## Design System
+
+### Color Palette
+
+| Token | CSS Variable | Tailwind Class | Hex | Usage |
+|-------|-------------|----------------|-----|-------|
+| Primary | `--brand` | `text-brand` / `bg-brand` | `#FF4F18` | CTAs, active states, highlights |
+| Secondary | `--secondary` | `text-secondary` / `bg-secondary` | `#1A1A1A` | Headings, inverted UI |
+| Tertiary / Surface | `--surface-alt` | `bg-surface-alt` | `#F9F9F9` | Section backgrounds |
+| Neutral | `--neutral` | `text-neutral` | `#6B7280` | Muted text, borders |
+
+**Never hardcode hex values.** Always use the CSS variable aliases via Tailwind utilities.
+
+The Radix `<Theme>` uses `accentColor="tomato"` (closest Radix palette to `#FF4F18`). Use `color="tomato"` on Radix components (Button, Badge, etc.) when the brand primary color is needed.
+
+### Typography
+
+| Role | Font | Variable | Usage |
+|------|------|----------|-------|
+| Headline | Be Vietnam Pro | `font-accent` | Section headings, display text |
+| Body | Hanken Grotesk | `font-main` | Paragraphs, labels, UI text |
+
+`font-main` (Hanken Grotesk) is applied globally on `body`. Apply `font-accent` (Be Vietnam Pro) to prominent headings. Heading HTML elements (`h1`–`h6`) automatically inherit `font-accent` via the global CSS rule.
+
+### Buttons
+
+All buttons use **pill / rounded-full** shape per design system:
+
+```tsx
+// Primary CTA
+<Button color="tomato" className="rounded-full">Find Food</Button>
+
+// Outlined
+<Button variant="outline" className="rounded-full">Learn More</Button>
+
+// Inverted (dark background)
+<Button variant="solid" className="rounded-full !bg-secondary !text-white">Sign In</Button>
+```
+
+### Search Input
+
+Search inputs use a **pill-shaped white container** wrapping a borderless `TextField.Root` + a `rounded-full` Button:
+
+```tsx
+<Flex align="center" className="rounded-full bg-white p-1.5 shadow-xl gap-1">
+  <TextField.Root variant="soft" className="flex-1 !bg-transparent !shadow-none !ring-0 !border-0" />
+  <Button color="tomato" className="rounded-full px-6">Search</Button>
+</Flex>
+```
+
+---
+
 ## Styling & Theming
 
 See `docs/ai/styling-and-theming.md` for detailed guide.
 
-- **CSS variables for theme colors** — defined in `tailwind.config.ts`, never hardcode hex values
+- **CSS variables for theme colors** — defined in `globals.css`, never hardcode hex values
 - **Radix UI theme tokens first** — use component props for color/size/variant
 - **Tailwind utilities second** — for layout, spacing, custom styling
 - **Fonts** — `font-main` and `font-accent` only, never import fonts directly
@@ -300,6 +352,132 @@ See `docs/ai/error-handling.md` for detailed guide.
 ❌ Logging PHI to Rollbar → use error codes and non-PHI context
 ❌ Empty catch blocks → log to Rollbar, return error response
 ❌ Direct `fetch()` in client components → use TanStack Query hooks
+
+---
+
+## Folder Structure
+
+Follows Next.js 15 App Router conventions. Server Components are the default — only add `'use client'` when the component needs state, effects, browser APIs, event handlers that update UI, or TanStack Query hooks. Extract the smallest possible island as Client Component; keep the outer shell as Server Component.
+
+```
+app/
+  (marketing)/                    ← Route group: public/landing pages (no auth required)
+    page.tsx                      ← Landing page (Server Component)
+    layout.tsx                    ← Marketing layout
+  (dashboard)/                    ← Route group: authenticated user pages
+    layout.tsx                    ← Auth-protected layout (includes Navbar)
+    stores/
+      page.tsx                    ← Restaurant listing (Server Component)
+      [id]/
+        page.tsx                  ← Restaurant detail (Server Component)
+    orders/
+      page.tsx                    ← Order history (Server Component)
+      [id]/
+        page.tsx                  ← Order detail with realtime ('use client')
+    offers/
+      page.tsx                    ← Offers listing (Server Component)
+  auth/                           ← Auth routes (no Navbar, own layout)
+    login/
+    sign-up/
+  actions/                        ← Server Actions — one file per domain, 'use server' at top
+    ordering.ts
+    restaurant.ts
+    payment.ts
+  components/
+    layout/                       ← Structural layout components
+      Navbar.tsx                  ← Server Component (static structure)
+      NavbarActions.tsx           ← 'use client' (cart count, mobile menu toggle)
+      Footer.tsx                  ← Server Component
+    sections/                     ← Full-page section components (one per landing/marketing section)
+      HeroSection/
+        index.tsx                 ← Server Component wrapper
+        SearchBar.tsx             ← 'use client' (controlled input + router.push)
+      PopularNearbySection.tsx    ← Server Component
+      FeaturesSection.tsx         ← Server Component
+      SignatureBitesSection.tsx   ← Server Component
+      AppDownloadBanner.tsx       ← Server Component
+    ui/                           ← Reusable presentational primitives
+      RestaurantCard.tsx          ← Server Component
+      FoodCard.tsx                ← Server Component
+      StarRating.tsx              ← Server Component
+    Form/                         ← Form input components (existing)
+
+lib/
+  domains/                        ← DDD bounded contexts (pure business logic, zero framework deps)
+    restaurant/
+      types.ts
+      repository.ts               ← Interface definition (IRestaurantRepository)
+      service.ts
+    ordering/
+      types.ts
+      repository.ts
+      service.ts
+      saga.ts                     ← Choreography saga handlers
+    delivery/
+    payment/
+    user/
+    notification/
+  infrastructure/                 ← Concrete implementations (Supabase, Kafka)
+    supabase/
+      repositories/               ← Implements domain repository interfaces
+    kafka/
+      producer.ts
+      consumers/
+        ordering/
+        delivery/
+        payment/
+  query/                          ← TanStack Query hooks
+    hooks/                        ← useFetch<Entity>, useUpdate<Entity>
+      use-fetch-restaurants.ts
+      use-fetch-orders.ts
+    README.md
+  hooks/                          ← Domain-specific custom React hooks
+    utils/                        ← Utility hooks
+  types/
+    supabase.ts                   ← Generated DB types (sync with schema)
+    events.ts                     ← Kafka DomainEvent<T> envelope types
+  supabase/
+    client.ts                     ← Client Component Supabase client
+    server.ts                     ← Server Component Supabase client
+    service.ts                    ← Admin (service role) client
+    middleware.ts                 ← Session refresh middleware
+  utils/
+    provider.ts                   ← buildProviderTree() helper
+    circuit-breaker.ts
+  rollbar/
+    index.ts
+  agents/                         ← Future agentic pipeline
+    fraud-detection/
+    route-optimization/
+    demand-forecast/
+    menu-recommendation/
+
+public/
+  images/
+    hero-bg.jpg
+    restaurants/
+    food/
+    app-mockup.png
+
+supabase/
+  migrations/                     ← All schema changes go here, never Studio in production
+```
+
+### Server vs Client Component Decision Rules
+
+Ask these questions in order — stop at first "yes":
+
+| Question                                                       | Answer →            |
+| -------------------------------------------------------------- | ------------------- |
+| Does it use `useState` / `useReducer`?                         | `'use client'`      |
+| Does it use `useEffect` / `useLayoutEffect`?                   | `'use client'`      |
+| Does it read `window`, `document`, `localStorage`?             | `'use client'`      |
+| Does it attach event listeners that mutate state?              | `'use client'`      |
+| Does it use a TanStack Query hook (`useFetch*`, `useUpdate*`)? | `'use client'`      |
+| Does it use React Context that wraps client state?             | `'use client'`      |
+| None of the above                                              | Server Component ✅ |
+
+**Extract minimally** — if only a button in a large card needs `onClick` state, extract just that button into a `*Actions.tsx` client file. Keep the card as Server Component.
 
 ---
 

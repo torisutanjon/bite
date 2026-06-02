@@ -2,29 +2,41 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
+  --brand: #ff4f18;
+  --brand-dark: #d93d0e;
+  --secondary: #1a1a1a;
+  --neutral: #6b7280;
+  --surface-alt: #f9f9f9;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-main: var(--font-hanken-grotesk);
+  --font-accent: var(--font-be-vietnam-pro);
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-secondary: var(--secondary);
+  --color-neutral: var(--neutral);
+  --color-surface-alt: var(--surface-alt);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-main), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-accent), Arial, sans-serif;
 }
 
 button {
-  cursor: pointer;
+  cursor: pointer !important;
 }
