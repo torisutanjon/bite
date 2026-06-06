@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { UserIcon } from "@/app/components/ui/icons";
 import NavSearch from "./NavSearch";
 import NavLinks from "./NavLinks";
 
@@ -39,25 +40,6 @@ function CartIcon(): ReactElement {
   );
 }
 
-function UserIcon(): ReactElement {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
 export default function DashboardNavbar(): ReactElement {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
@@ -78,10 +60,18 @@ export default function DashboardNavbar(): ReactElement {
               <Box className="text-brand">
                 <LocationPinIcon />
               </Box>
-              <Text size="1" weight="medium" className="text-gray-700 whitespace-nowrap">
+              <Text
+                size="1"
+                weight="medium"
+                className="text-gray-700 whitespace-nowrap"
+              >
                 22118 Baker St, London
               </Text>
-              <ChevronDownIcon className="text-gray-400" width="12" height="12" />
+              <ChevronDownIcon
+                className="text-gray-400"
+                width="12"
+                height="12"
+              />
             </Flex>
           </Flex>
 
@@ -106,7 +96,10 @@ export default function DashboardNavbar(): ReactElement {
                 justify="center"
                 className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-brand rounded-full"
               >
-                <Text className="text-white font-bold" style={{ fontSize: "9px", lineHeight: 1 }}>
+                <Text
+                  className="text-white font-bold"
+                  style={{ fontSize: "9px", lineHeight: 1 }}
+                >
                   1
                 </Text>
               </Flex>
