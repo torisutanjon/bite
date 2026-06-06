@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
 import { GearIcon } from "@radix-ui/react-icons";
+import { UserIcon } from "@/app/components/ui/icons";
 
 function CartIcon(): ReactElement {
   return (
@@ -75,11 +76,11 @@ export default function Navbar(): ReactElement {
               <CartIcon />
             </Link>
             <Link
-              href="/settings"
+              href="/profile"
               className="flex items-center text-gray-600 hover:text-brand transition-colors"
               aria-label="Settings"
             >
-              <GearIcon width="20" height="20" />
+              <UserIcon />
             </Link>
           </Flex>
         </Flex>
