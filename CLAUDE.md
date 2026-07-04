@@ -141,7 +141,9 @@ import { Box, Heading, Text, Button, TextField } from '@radix-ui/themes'
 
 ## Test-Driven Development
 
-**TDD is mandatory:**
+**TDD is mandatory for every task, no exceptions.** Before writing any implementation code, you MUST write tests first.
+
+**Strict workflow — never deviate:**
 
 1. Write tests FIRST
 2. Make them fail

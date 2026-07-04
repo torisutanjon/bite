@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/d/Obsidian/vaults/BiteVault/Decisions/**)",
+      "Read(//mnt/d/Obsidian/vaults/BiteVault/Sessions/**)"
+    ]
+  }
+}
