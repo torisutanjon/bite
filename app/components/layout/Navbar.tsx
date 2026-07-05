@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
-import { GearIcon } from "@radix-ui/react-icons";
 import { UserIcon } from "@/app/components/ui/icons";
 
 function CartIcon(): ReactElement {
@@ -26,7 +25,7 @@ function CartIcon(): ReactElement {
 
 export default function Navbar(): ReactElement {
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-neutral/15 bg-white/95 backdrop-blur-sm">
       <Container size="4">
         <Flex align="center" justify="between" className="h-16 px-4">
           {/* Logo */}
@@ -40,27 +39,27 @@ export default function Navbar(): ReactElement {
           <Flex gap="1" align="center">
             <Link
               href="/stores"
-              className="px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 rounded-lg hover:bg-surface-alt transition-colors"
             >
-              <Text size="2" weight="medium" className="text-gray-700">
+              <Text size="2" weight="medium" className="text-secondary">
                 Stores
               </Text>
             </Link>
-            <Box className="h-4 w-px bg-gray-200" />
+            <Box className="h-4 w-px bg-neutral/20" />
             <Link
               href="/orders"
-              className="px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 rounded-lg hover:bg-surface-alt transition-colors"
             >
-              <Text size="2" weight="medium" className="text-gray-700">
+              <Text size="2" weight="medium" className="text-secondary">
                 Orders
               </Text>
             </Link>
-            <Box className="h-4 w-px bg-gray-200" />
+            <Box className="h-4 w-px bg-neutral/20" />
             <Link
               href="/offers"
-              className="px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 rounded-lg hover:bg-surface-alt transition-colors"
             >
-              <Text size="2" weight="medium" className="text-gray-700">
+              <Text size="2" weight="medium" className="text-secondary">
                 Offers
               </Text>
             </Link>
@@ -70,14 +69,14 @@ export default function Navbar(): ReactElement {
           <Flex gap="3" align="center">
             <Link
               href="/cart"
-              className="flex items-center text-gray-600 hover:text-brand transition-colors"
+              className="flex items-center text-neutral hover:text-brand transition-colors"
               aria-label="Cart"
             >
               <CartIcon />
             </Link>
             <Link
               href="/profile"
-              className="flex items-center text-gray-600 hover:text-brand transition-colors"
+              className="flex items-center text-neutral hover:text-brand transition-colors"
               aria-label="Settings"
             >
               <UserIcon />
