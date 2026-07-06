@@ -26,7 +26,7 @@ export default function SearchBar(): ReactElement {
   return (
     <Flex
       align="center"
-      className="mt-8 max-w-xl rounded-full bg-white p-1.5 shadow-xl"
+      className="mt-9 max-w-xl rounded-full bg-white p-1.5 shadow-lg"
     >
       <TextField.Root
         variant="soft"
