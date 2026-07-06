@@ -6,6 +6,8 @@ const createJestConfig = nextJest({ dir: './' })
 const config: Config = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  // Playwright specs live in /tests — keep them out of the jest run.
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/tests/'],
   coverageProvider: 'v8',
   coverageThreshold: {
     global: {
