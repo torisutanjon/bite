@@ -1,5 +1,12 @@
 import type { ReactElement } from "react";
-import { Box, Container, Flex, Heading } from "@radix-ui/themes";
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Section,
+  Text,
+} from "@radix-ui/themes";
 import FoodCard from "@/app/components/ui/FoodCard";
 
 const signatureBites = [
@@ -35,10 +42,23 @@ const signatureBites = [
 
 export default function SignatureBitesSection(): ReactElement {
   return (
-    <div className="h-[40vh] flex flex-col justify-center overflow-hidden py-8">
+    <Section size="3">
       <Container size="4">
         <Box className="px-4">
-          <Heading size="6" weight="bold" mb="6">
+          <Text
+            as="span"
+            size="1"
+            weight="medium"
+            className="uppercase tracking-[0.2em] text-brand block mb-2"
+          >
+            Chef&apos;s picks
+          </Text>
+          <Heading
+            size="7"
+            weight="medium"
+            mb="6"
+            className="tracking-tight text-secondary"
+          >
             Signature Bites
           </Heading>
 
@@ -53,6 +73,6 @@ export default function SignatureBitesSection(): ReactElement {
           </Flex>
         </Box>
       </Container>
-    </div>
+    </Section>
   );
 }
