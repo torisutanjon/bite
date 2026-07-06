@@ -27,4 +27,9 @@ describe('Navbar', () => {
     render(<Navbar />)
     expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument()
   })
+
+  it('renders the mobile menu button', () => {
+    render(<Navbar />)
+    expect(screen.getByRole('button', { name: /open menu/i })).toBeInTheDocument()
+  })
 })

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
 import { UserIcon } from "@/app/components/ui/icons";
+import MobileNav from "./MobileNav";
 
 function CartIcon(): ReactElement {
   return (
@@ -35,8 +36,8 @@ export default function Navbar(): ReactElement {
             </Text>
           </Link>
 
-          {/* Nav Links */}
-          <Flex gap="1" align="center">
+          {/* Nav Links (desktop) */}
+          <Flex gap="1" align="center" display={{ initial: "none", sm: "flex" }}>
             <Link
               href="/stores"
               className="px-4 py-2 rounded-lg hover:bg-surface-alt transition-colors"
@@ -81,6 +82,7 @@ export default function Navbar(): ReactElement {
             >
               <UserIcon />
             </Link>
+            <MobileNav />
           </Flex>
         </Flex>
       </Container>
