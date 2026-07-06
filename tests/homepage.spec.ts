@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-const SHOTS =
-  '/tmp/claude-1000/-home-clarisfanhere-Practices-bite/147d82a2-03d3-4292-9e11-6f3d7de86060/scratchpad';
-
 const viewports = [
   { name: 'mobile', width: 390, height: 844 },
   { name: 'desktop', width: 1440, height: 900 },
@@ -14,7 +11,7 @@ for (const vp of viewports) {
 
     test('renders sections, eyebrows, and has no horizontal overflow', async ({
       page,
-    }) => {
+    }, testInfo) => {
       await page.goto('/');
 
       // Hero + the four section eyebrows are present (BITE-006 restyle markers).
@@ -27,8 +24,9 @@ for (const vp of viewports) {
       await expect(page.getByText("Chef's picks")).toBeVisible();
       await expect(page.getByText('Dash on the go.')).toBeVisible();
 
+      // Per-test output dir — unique across projects/viewports, portable to CI.
       await page.screenshot({
-        path: `${SHOTS}/bite-006-${vp.name}.png`,
+        path: testInfo.outputPath(`bite-006-${vp.name}.png`),
         fullPage: true,
       });
 

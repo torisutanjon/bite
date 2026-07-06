@@ -136,13 +136,21 @@ data.
 - Render-and-measure: `yarn dev`, inspect Hero and each section at a mobile width and a
   desktop width; confirm no content clipping (the whole point of removing fixed heights)
   and that the premium-minimal spacing reads correctly. Report observations.
-- Playwright (BITE-004) is not yet set up; browser verification is manual for this item.
-  Flag to user if real automated measurement is wanted before merge.
+- Playwright e2e render-and-measure: `yarn test:e2e` drives the real page at mobile (390×844)
+  and desktop (1440×900), asserting no horizontal overflow and capturing screenshots.
+
+> **Scope note (added during execution):** the Playwright harness was pulled forward from
+> BITE-004 and installed on this branch so the render-and-measure gate is automated rather
+> than manual — this overrides the two "no Playwright" lines below. The e2e pass also caught a
+> 390px overflow in the (originally token-only) navbar, so a responsive mobile navbar
+> (`MobileNav.tsx`, a `'use client'` island) was added — a deliberate deviation from the
+> "no new client components" boundary, approved by the user.
 
 ## Non-goals / out of scope
 
 - No backend, data fetching, Supabase, or TanStack Query (BITE-002/003/005).
 - No changes to `RestaurantCard`, `FeedRestaurantCard`, `/stores`, or any dashboard page.
 - No new sections, no reordering, no content rewrites.
-- No new dependencies; no Playwright setup (BITE-004).
+- ~~No new dependencies; no Playwright setup (BITE-004).~~ — superseded: `@playwright/test`
+  added (see scope note above); no other new dependencies.
 - No changes to the global design tokens in `globals.css` (consume them, don't redefine).
