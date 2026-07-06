@@ -40,27 +40,27 @@ function PlayStoreIcon(): ReactElement {
 
 export default function AppDownloadBanner(): ReactElement {
   return (
-    <div className="h-[50vh] px-6 py-6 md:px-10 md:py-8">
-      {/* Dark rounded card — fills the padded area */}
-      <div className="h-full bg-gray-950 rounded-3xl overflow-hidden flex items-center">
+    <Box className="px-6 py-10 md:px-10 md:py-16">
+      {/* Dark rounded card */}
+      <Box className="bg-secondary rounded-3xl overflow-hidden">
         <Container size="4">
           <Grid
             columns={{ initial: "1", md: "2" }}
-            gap="12"
+            gap="9"
             align="center"
-            className="px-8 md:px-12"
+            className="px-8 py-12 md:px-12 md:py-16"
           >
             {/* Text content */}
             <Box>
               <Heading
                 size={{ initial: "7", md: "8" }}
-                className="text-white leading-tight"
+                className="text-white leading-tight tracking-tight"
               >
                 Dash on the go.
               </Heading>
               <Text
                 size="3"
-                className="mt-4 text-gray-400 block leading-relaxed max-w-sm"
+                className="mt-4 text-white/70 block leading-relaxed max-w-sm"
               >
                 Download the BiteDash app for exclusive offers, real-time
                 tracking, and a smoother ordering experience.
@@ -69,6 +69,7 @@ export default function AppDownloadBanner(): ReactElement {
                 <Button
                   size="3"
                   variant="outline"
+                  radius="full"
                   className="!border-white/20 !text-white !bg-white/5 hover:!bg-white/10 gap-2"
                   aria-label="Download on the App Store"
                 >
@@ -78,6 +79,7 @@ export default function AppDownloadBanner(): ReactElement {
                 <Button
                   size="3"
                   variant="outline"
+                  radius="full"
                   className="!border-white/20 !text-white !bg-white/5 hover:!bg-white/10 gap-2"
                   aria-label="Get it on Google Play"
                 >
@@ -88,7 +90,7 @@ export default function AppDownloadBanner(): ReactElement {
             </Box>
 
             {/* Phone mockup */}
-            <Box className="relative h-64 flex items-center justify-center">
+            <Flex align="center" justify="center" className="relative h-64">
               <Box className="relative w-44 h-56">
                 <Image
                   src="https://picsum.photos/seed/phonemock/400/600"
@@ -98,10 +100,10 @@ export default function AppDownloadBanner(): ReactElement {
                   sizes="176px"
                 />
               </Box>
-            </Box>
+            </Flex>
           </Grid>
         </Container>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

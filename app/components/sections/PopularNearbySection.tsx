@@ -67,12 +67,24 @@ export default function PopularNearbySection(): ReactElement {
       <Container size="4">
         <Box className="px-4">
           {/* Header */}
-          <Flex justify="between" align="end" mb="6">
+          <Flex justify="between" align="end" mb="7">
             <Box>
-              <Heading size="6" weight="bold">
+              <Text
+                as="span"
+                size="1"
+                weight="medium"
+                className="uppercase tracking-[0.2em] text-brand block mb-2"
+              >
+                Nearby
+              </Text>
+              <Heading
+                size="7"
+                weight="medium"
+                className="tracking-tight text-secondary"
+              >
                 Popular Nearby
               </Heading>
-              <Text size="2" className="text-gray-500 mt-1 block">
+              <Text size="2" className="text-neutral mt-2 block">
                 The trending flavors in your neighborhood right now.
               </Text>
             </Box>
@@ -82,17 +94,17 @@ export default function PopularNearbySection(): ReactElement {
                 weight="medium"
                 className="text-brand hover:text-brand-dark transition-colors"
               >
-                View all 4
+                View all
               </Text>
             </Link>
           </Flex>
 
           {/* Grid: large featured card left, 2×2 grid right */}
-          <Flex gap="4" className="flex-col sm:flex-row">
+          <Flex gap="5" className="flex-col sm:flex-row">
             <Box className="sm:w-3/5">
               <RestaurantCard {...featuredRestaurant} featured />
             </Box>
-            <Grid columns="2" gap="3" className="sm:w-2/5">
+            <Grid columns="2" gap="4" className="sm:w-2/5">
               {nearbyRestaurants.map((restaurant) => (
                 <RestaurantCard key={restaurant.id} {...restaurant} />
               ))}

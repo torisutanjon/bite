@@ -7,4 +7,9 @@ describe('PopularNearbySection', () => {
     render(<PopularNearbySection />)
     expect(screen.getByText('Popular Nearby')).toBeInTheDocument()
   })
+
+  it('renders the eyebrow label', () => {
+    render(<PopularNearbySection />)
+    expect(screen.getByText('Nearby')).toBeInTheDocument()
+  })
 })

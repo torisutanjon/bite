@@ -18,7 +18,7 @@ export default function FoodCard({
   image,
 }: FoodCardProps): ReactElement {
   return (
-    <Box className="relative w-48 flex-shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
+    <Box className="relative w-48 flex-shrink-0 overflow-hidden rounded-2xl bg-white border border-neutral/15">
       {/* Image */}
       <Box className="relative h-52">
         <Image
@@ -30,7 +30,7 @@ export default function FoodCard({
         />
         {badge && (
           <Box className="absolute top-2 right-2">
-            <Badge color={badgeColor} variant="solid" size="1">
+            <Badge color={badgeColor} variant="solid" size="1" radius="full">
               {badge}
             </Badge>
           </Box>
@@ -38,15 +38,11 @@ export default function FoodCard({
       </Box>
 
       {/* Info */}
-      <Box className="p-3">
-        <Text
-          size="2"
-          weight="bold"
-          className="block text-gray-900 leading-snug"
-        >
+      <Box className="p-4">
+        <Text size="2" weight="medium" className="block text-secondary leading-snug">
           {name}
         </Text>
-        <Text size="1" className="text-gray-500 mt-0.5 block">
+        <Text size="1" className="text-neutral mt-1 block">
           {restaurant}
         </Text>
       </Box>

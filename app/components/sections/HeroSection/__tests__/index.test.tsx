@@ -13,4 +13,9 @@ describe('HeroSection', () => {
     render(<HeroSection />)
     expect(screen.getByText(/hunger fulfilled/i)).toBeInTheDocument()
   })
+
+  it('renders the eyebrow label', () => {
+    render(<HeroSection />)
+    expect(screen.getByText(/order in minutes/i)).toBeInTheDocument()
+  })
 })
