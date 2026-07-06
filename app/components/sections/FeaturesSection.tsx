@@ -40,14 +40,29 @@ const features = [
 
 export default function FeaturesSection(): ReactElement {
   return (
-    <Section size="3" className="bg-surface-alt">
+    <Section size="4" className="bg-surface-alt">
       <Container size="4">
         <Box className="px-4">
-          <Heading size="7" align="center" weight="bold">
-            Simple, Fast, Delicious
-          </Heading>
+          <Flex direction="column" align="center" className="text-center">
+            <Text
+              as="span"
+              size="1"
+              weight="medium"
+              className="uppercase tracking-[0.2em] text-brand mb-2"
+            >
+              How it works
+            </Text>
+            <Heading
+              size="7"
+              weight="medium"
+              align="center"
+              className="tracking-tight text-secondary"
+            >
+              Simple, Fast, Delicious
+            </Heading>
+          </Flex>
 
-          <Grid columns={{ initial: "1", sm: "3" }} gap="8" className="mt-12">
+          <Grid columns={{ initial: "1", sm: "3" }} gap="8" className="mt-14">
             {features.map((feature) => (
               <Flex
                 key={feature.id}
@@ -55,19 +70,19 @@ export default function FeaturesSection(): ReactElement {
                 align="center"
                 className="text-center"
               >
-                {/* Icon circle */}
+                {/* Icon circle — restrained */}
                 <Flex
                   align="center"
                   justify="center"
-                  className="w-16 h-16 rounded-full bg-orange-100 text-brand"
+                  className="w-14 h-14 rounded-full bg-white text-brand shadow-sm ring-1 ring-neutral/10"
                 >
                   {feature.icon}
                 </Flex>
 
-                <Heading size="4" weight="bold" mt="4">
+                <Heading size="4" weight="medium" mt="5" className="text-secondary">
                   {feature.title}
                 </Heading>
-                <Text size="2" className="text-gray-500 mt-2 leading-relaxed">
+                <Text size="2" className="text-neutral mt-2 leading-relaxed max-w-xs">
                   {feature.description}
                 </Text>
               </Flex>

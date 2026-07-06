@@ -14,4 +14,9 @@ describe('FeaturesSection', () => {
     expect(screen.getByText('Seamless Checkout')).toBeInTheDocument()
     expect(screen.getByText('Lightning Delivery')).toBeInTheDocument()
   })
+
+  it('renders the eyebrow label', () => {
+    render(<FeaturesSection />)
+    expect(screen.getByText('How it works')).toBeInTheDocument()
+  })
 })
