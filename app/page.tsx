@@ -20,10 +20,8 @@ export default function LandingPage(): ReactElement {
       <Navbar />
       <main>
         <HeroSection />
-        <div className="min-h-screen flex flex-col">
-          <PopularNearbySection />
-          <FeaturesSection />
-        </div>
+        <PopularNearbySection />
+        <FeaturesSection />
         <SignatureBitesSection />
         <AppDownloadBanner />
       </main>
