@@ -32,22 +32,33 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  /* Configure projects for major browsers */
+  /*
+   * Configure projects for major browsers.
+   *
+   * Chromium always runs — it is the local verify gate for the /bite-work loop.
+   * Firefox and WebKit are CI-only: their system libraries (libgtk-4, etc.) are
+   * not reliably installable on the local WSL2 dev box (no passwordless sudo),
+   * whereas CI installs them via `playwright install --with-deps`. This keeps
+   * `yarn test:e2e` green locally while preserving cross-browser coverage on PRs.
+   */
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    ...(process.env.CI
+      ? [
+          {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+          },
+          {
+            name: 'webkit',
+            use: { ...devices['Desktop Safari'] },
+          },
+        ]
+      : []),
 
     /* Test against mobile viewports. */
     // {
@@ -70,9 +81,14 @@ export default defineConfig({
     // },
   ],
 
-  /* Start the Next.js dev server before the tests (reused if already running). */
+  /*
+   * Start the app before the tests. Locally: the Next.js dev server (reused if
+   * already running). In CI: `yarn start` serving the production build — the
+   * workflow runs `yarn build` in a prior step, so the timeout below covers
+   * server startup only.
+   */
   webServer: {
-    command: 'yarn dev',
+    command: process.env.CI ? 'yarn start' : 'yarn dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
