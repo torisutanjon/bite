@@ -33,4 +33,12 @@ describe('PasswordInput', () => {
     render(<PasswordInput value="" onChange={jest.fn()} error="Too short" />)
     expect(screen.getByText('Too short')).toBeInTheDocument()
   })
+
+  it('calls onChange with the typed value', async () => {
+    const user = userEvent.setup()
+    const handleChange = jest.fn()
+    render(<PasswordInput value="" onChange={handleChange} />)
+    await user.type(screen.getByPlaceholderText('••••••••'), 'a')
+    expect(handleChange).toHaveBeenCalledWith('a')
+  })
 })
