@@ -3,9 +3,11 @@ description: Run the per-item build loop (discuss → TDD → verify → PR → 
 argument-hint: BITE-###
 ---
 
-Follow the `## /bite-work BITE-###` section of `MYWORKFLOW.md` in the repo root exactly, for: **$ARGUMENTS**. `MYWORKFLOW.md` is the source of truth; if it is not already in context, read it first.
+Run the per-item build loop for **$ARGUMENTS**.
 
-The loop, in short:
+> **Source of truth:** if a personal `MYWORKFLOW.md` exists in the repo root, follow its `## /bite-work` section exactly (read it first if not already in context) — it may extend or override the steps below. If `MYWORKFLOW.md` is absent (the usual case for anyone but the author), the self-contained loop below is authoritative.
+
+The loop:
 
 1. **Pull** the item from `/mnt/d/Obsidian/vaults/BiteVault/Backlog.md` (and `Tasks/$ARGUMENTS.md` if it exists), including its **`Goal` (`G#`) from `Goals.md`**; resolve `no-goal` with me first.
 2. **Analyze** — bug → reproduce first (browser-observable bugs: reproduce live via the Playwright MCP tools; non-browser bugs: at the unit level); feature → assess scope. Push back if invalid, done, or underspecified.
