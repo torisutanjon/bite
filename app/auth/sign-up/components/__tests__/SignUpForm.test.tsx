@@ -1,4 +1,5 @@
 import React from 'react'
+import { act } from '@testing-library/react'
 import { render, screen } from '@/lib/test-utils'
 import userEvent from '@testing-library/user-event'
 import SignUpForm from '../SignUpForm'
@@ -96,5 +97,41 @@ describe('SignUpForm', () => {
     await user.click(screen.getByRole('button', { name: /create account/i }))
     expect(screen.getByText(/valid email address/i)).toBeInTheDocument()
     expect(screen.queryByText(/must agree to the terms/i)).not.toBeInTheDocument()
+  })
+
+  it('updates the full name field as the user types', async () => {
+    const user = userEvent.setup()
+    render(<SignUpForm />)
+    const fullName = screen.getByPlaceholderText('John Doe')
+    await user.type(fullName, 'Jane Roe')
+    expect(fullName).toHaveValue('Jane Roe')
+  })
+
+  it('shows phone error on submit with a valid email but invalid phone', async () => {
+    const user = userEvent.setup()
+    render(<SignUpForm />)
+    await user.type(screen.getByPlaceholderText('name@company.com'), 'valid@test.com')
+    await user.type(screen.getByPlaceholderText('+1 (555) 000-0000'), 'abc')
+    await user.click(screen.getByRole('checkbox'))
+    await user.click(screen.getByRole('button', { name: /create account/i }))
+    expect(screen.getByText(/valid phone number/i)).toBeInTheDocument()
+  })
+
+  it('enters the loading state on valid submit and clears it when done', async () => {
+    jest.useFakeTimers()
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+    render(<SignUpForm />)
+    await user.type(screen.getByPlaceholderText('name@company.com'), 'valid@test.com')
+    await user.click(screen.getByRole('checkbox'))
+    const submit = screen.getByRole('button', { name: /create account/i })
+    await user.click(submit)
+    // handleSubmit passes validation → sets isLoading, disabling the button
+    expect(submit).toBeDisabled()
+    // advance past the simulated 1500ms request → finally clears isLoading
+    await act(async () => {
+      jest.advanceTimersByTime(1500)
+    })
+    expect(submit).not.toBeDisabled()
+    jest.useRealTimers()
   })
 })

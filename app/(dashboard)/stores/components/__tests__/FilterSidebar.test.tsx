@@ -49,4 +49,22 @@ describe('FilterSidebar', () => {
     await user.click(screen.getByRole('button', { name: '$' }))
     expect(screen.getByRole('button', { name: '$' })).toHaveClass('rt-variant-solid')
   })
+
+  it('toggles the 4.5+ rating checkbox on', async () => {
+    const user = userEvent.setup()
+    render(<FilterSidebar />)
+    const [rating45] = screen.getAllByRole('checkbox')
+    expect(rating45).toHaveAttribute('data-state', 'unchecked')
+    await user.click(rating45)
+    expect(rating45).toHaveAttribute('data-state', 'checked')
+  })
+
+  it('toggles the 4.0+ rating checkbox off', async () => {
+    const user = userEvent.setup()
+    render(<FilterSidebar />)
+    const [, rating40] = screen.getAllByRole('checkbox')
+    expect(rating40).toHaveAttribute('data-state', 'checked')
+    await user.click(rating40)
+    expect(rating40).toHaveAttribute('data-state', 'unchecked')
+  })
 })
