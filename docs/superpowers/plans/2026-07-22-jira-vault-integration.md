@@ -540,7 +540,7 @@ Create `scripts/jira-backfill.sh`:
 ```bash
 #!/usr/bin/env bash
 # One-time backfill of BiteVault items into Jira. Idempotent: an item whose
-# legacy-vault-### label already exists in Jira is skipped, so re-running
+# legacy-BITE-### label already exists in Jira is skipped, so re-running
 # cannot create duplicates.
 #
 # Dry-run is the DEFAULT. --execute performs irreversible writes: this token

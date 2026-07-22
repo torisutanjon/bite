@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-time backfill of BiteVault items into Jira.
 #
-# IDEMPOTENT: an item whose legacy-vault-### label already exists in Jira is
+# IDEMPOTENT: an item whose legacy-BITE-### label already exists in Jira is
 # skipped, so re-running cannot create duplicates.
 #
 # DRY-RUN IS THE DEFAULT. --execute performs irreversible writes: the scoped

@@ -1,16 +1,28 @@
 # MYWORKFLOW — bite standard loop (personal, local-only)
 
-> Personal working process for the **bite** repo. Kept local via `.git/info/exclude`
-> — never committed. Loaded because `AGENTS.md` tells any AI harness to read this file
-> when it exists. Anyone without it gets default agent behavior.
+> Personal working process for the **bite** repo. **This file IS committed** and is
+> published with the repo — put no credentials in it, and reference configuration by
+> environment-variable name only. Loaded because `AGENTS.md` tells any AI harness to
+> read this file when it exists. Anyone without it gets default agent behavior.
 
-Work items live in the **BiteVault** Obsidian vault at
-`/mnt/d/Obsidian/vaults/BiteVault/` (Windows `D:\Obsidian\vaults\BiteVault`). The vault
-is the **source of truth** for the backlog and for the current progress of the app —
-the agent reads *and* writes it. There is no external issue tracker — no separate
-ticketing system, no GitHub Issues; the vault is the tracker. `Goals.md` owns *why*
-work happens (the North Star + active goals `G#`); `Backlog.md` owns item state (each
-row links to a goal); `Progress.md` is the living app snapshot.
+Work items live in **Jira** (project `BITE`, via `scripts/jira.sh`) and the **BiteVault**
+Obsidian vault at `/mnt/d/Obsidian/vaults/BiteVault/` (Windows `D:\Obsidian\vaults\BiteVault`).
+
+**Jira is the source of truth for item state** — key, title, type, status, description.
+**The vault owns what Jira handles poorly** — `Goals.md` (why work happens, the North Star
++ active goals `G#`), `Tasks/` (context and acceptance criteria), `Fixes/`, `Decisions/`,
+`Sessions/` (continuity) and `Progress.md` (the living app snapshot). `Backlog.md` is a
+**generated mirror** of Jira — regenerate it at `/bite-start`, never hand-edit it.
+
+Jira config lives in `.env.local` (git-ignored): `JIRA_SITE`, `JIRA_EMAIL`, `JIRA_TOKEN`,
+`JIRA_CLOUD_ID`, `JIRA_PROJECT_KEY`. The token is **scoped to issue read/write** — it
+cannot delete issues, create projects, or read `/myself`. So: every write is gated on my
+explicit confirmation, and nothing created can be undone by tooling.
+
+⚠️ **Two numbering systems share the `BITE-` prefix.** `BITE-003` is a legacy *vault id*;
+`BITE-3` is a *Jira key* for a different item. `BiteVault/JiraMap.md` is the authoritative
+resolver, and `scripts/jira.sh find-legacy` accepts either spelling. New items are
+Jira-native and never receive a legacy id.
 
 The commands below are **separate and explicit**. Nothing chains automatically:
 `/bite-start` only lists; it never picks an item or starts work. Work begins only when I
@@ -22,35 +34,51 @@ invoke `/bite-work` for a specific item.
 
 When I begin a session ("start my day", `/bite-start`, etc.), do **only** this:
 
-1. Read the most recent note in `BiteVault/Sessions/` and summarize where we left off
-   (decisions, current state, next steps).
-2. Read `BiteVault/Backlog.md` and list items grouped by status in this display order,
-   showing `BITE-### [<type>] <title>` (with its goal `G#`), and flag bugs:
+1. **Health check** — `./scripts/jira.sh check`. On non-zero exit, print
+   `⚠ JIRA UNAVAILABLE — vault may be stale`, continue in **degraded mode** from the
+   vault alone, and label the whole report degraded. Never fall back silently.
+2. **Read Jira** — `./scripts/jira.sh list`. Authoritative for key, legacy id, type,
+   status, goal and title.
+3. **Read the vault** — the most recent note in `BiteVault/Sessions/`, plus `Goals.md`,
+   `Progress.md`, `JiraMap.md`, and `Tasks/` for detail.
+4. **Join** on the legacy id or Jira key — **each item rendered exactly once**; Jira wins
+   on conflict.
+5. **List** grouped in this display order, showing `KEY (BITE-###) [<type>] <title> — G#`,
+   and flag bugs:
    1. **In Progress**
-   2. **Ready**
-   3. **Backlog**
+   2. **Ready** — `state-ready` label while status is `To Do`
+   3. **Backlog** — `state-backlog` label while status is `To Do`
    4. **Done** — list briefly.
-3. Read `BiteVault/Goals.md`; list the North Star + active goals. **Flag every backlog
-   item whose `Goal` cell is empty or `no-goal`** so alignment drift surfaces at session
-   start.
-4. Read `BiteVault/Progress.md` for the current app snapshot if useful.
-5. **Stop.** Do not auto-pick, do not analyze, do not start the loop. Wait for me to
+6. **Drift report** — `UNFILED` (vault row, no ticket) · `UNTRACKED` (ticket, no vault
+   row) · `DESYNCED` (status disagreement) · `NO-GOAL` (missing or `no-goal` goal label).
+   Print `none` for empty classes.
+7. Summarize where we left off from the session note (decisions, current state, next steps),
+   and list the North Star + active goals from `Goals.md`.
+8. **Stop.** Do not auto-pick, do not analyze, do not start the loop. Wait for me to
    choose an item and invoke `/bite-work` myself.
 
 ---
 
 ## `/bite-new "<title>"` — file new work (no code)
 
-Because the vault is writable, the agent files the item directly:
+Jira is the ID authority, so the ticket is created **first**, then the vault note — a
+vault row pointing at a ticket that failed to create is worse than the reverse. New items
+are Jira-native and get **no** `BITE-###` legacy id.
 
-1. Append a new `BITE-###` row to `BiteVault/Backlog.md` (next sequential ID) with type,
-   a **`Goal` value** (`G#` from `Goals.md`), status `Backlog`, and a one-line
-   description. The goal link is **required** — if no live goal fits, do not silently
-   file it: set `no-goal`, tell me, and ask me to pick an existing goal or propose a new
-   one.
-2. If the item needs detail (acceptance criteria, context), create
-   `BiteVault/Tasks/BITE-###.md` from the task template.
-3. **Stop.** This only files the item — invoke `/bite-work BITE-###` when ready to build.
+1. **Resolve the goal** (`G#` from `Goals.md`). Required — if no live goal fits, do not
+   silently file it: stop, tell me, and ask me to pick an existing goal or propose a new one.
+2. **Map the type** — `feat → Feature` · `enhancement → Story` · `chore → Task` ·
+   `test → Task` · `bug → Bug`.
+3. **Draft** the title and a description with these exact sections: `## Context`,
+   `## Scope` (with explicit NON-GOALS), `## Expected Result` (one observable end state),
+   `## Acceptance Criteria` (checkbox list including the standing gates).
+4. **Show me the draft and wait for explicit confirmation** — this writes to a real
+   tracker and the token cannot delete what it creates.
+5. **Create** via `./scripts/jira.sh create <IssueType> "<title>" <descfile> bite
+   type-<type> goal-<G#> state-backlog`; capture the key.
+6. **Write the vault** — `Backlog.md` row keyed by the Jira key, plus `Tasks/<KEY>.md`
+   from the task template.
+7. **Stop.** This only files the item — invoke `/bite-work <KEY>` when ready to build.
 
 ---
 
@@ -58,9 +86,14 @@ Because the vault is writable, the agent files the item directly:
 
 Run only when I invoke it for a specific item. Never triggered by `/bite-start`.
 
-1. **Pull** the item from `Backlog.md` (and `Tasks/BITE-###.md` if it exists) — title,
-   type, status, description, **and its `Goal` (`G#`) from `Goals.md`**. If it is
-   `no-goal`, resolve the goal with me before proceeding.
+0. **Resolve the id.** The argument may be a Jira key (`BITE-12`) or a legacy vault id
+   (`BITE-016`) — same prefix, different systems. Resolve a vault id with
+   `./scripts/jira.sh find-legacy <id>` and use the Jira key from then on, including for
+   the branch name and commit prefix.
+1. **Pull** the item from Jira (`./scripts/jira.sh list`) and its `Tasks/` note if one
+   exists — title, type, status, description, **and its `Goal` (`G#`) from `Goals.md`**.
+   If it is `no-goal`, resolve the goal with me before proceeding. Transition the ticket
+   to **In Progress** and clear its `state-ready` / `state-backlog` label.
 2. **Analyze.** Bug → assess **validity** by **reproducing it first**. For a
    **browser-observable** bug, reproduce it live in a real browser via the Playwright
    MCP tools (`yarn dev`, drive to the failing state, observe the break firsthand) —
@@ -96,11 +129,28 @@ Run only when I invoke it for a specific item. Never triggered by `/bite-start`.
 8. **Micro-commit** — small, focused commits referencing the item (`BITE-###:
    description`). No AI attribution.
 9. **Push and open a PR** targeting `develop`. No attribution in the PR body.
-10. **Close the loop in the vault:** mark the item `Done` in `Backlog.md`, update
-    `Progress.md`, write `Fixes/BITE-###.md` (root cause + fix + verification) **plus a
-    one-line `Goal impact` (which `G#`, what changed for the user)**, **update the
-    `Goals.md` Rollup** (add the item ✓ under its goal), write any `Decisions/` record,
-    and append what shipped (PR/commit) to the current session note.
+10. **Close the loop:** transition the ticket to **Done**, then update the vault — mark
+    the item `Done` in `Backlog.md`, update `Progress.md`, write `Fixes/<KEY>.md` (root
+    cause + fix + verification) **plus a one-line `Goal impact` (which `G#`, what changed
+    for the user)**, **update the `Goals.md` Rollup** (add the item ✓ under its goal),
+    write any `Decisions/` record, and append what shipped (PR/commit) to the current
+    session note.
+
+### Jira status writeback
+
+Jira is authoritative for status, so the loop moves the ticket as it advances:
+
+| Loop step | Transition |
+| --- | --- |
+| 1 — pull the item | `In Progress` |
+| 7 — verification passes | `QA Review` |
+| 9 — PR opened | `Code Review` |
+| 10 — close the loop | `Done` |
+| PR review requests changes | `Needs Revision` |
+
+`Ready for Production` is not used by the loop; it stays manual. **A transition failure is
+a warning, not a loop abort** — report it and carry on; `/bite-start`'s `DESYNCED` check
+catches it next session.
 
 ---
 
@@ -119,9 +169,12 @@ When wrapping up ("that's it for today", etc.):
 
 - Accelerator with a human gate — the agent reproduces and proposes; I approve the
   approach and review the PR. Not autonomous merging.
-- **The vault is the source of truth** — keep `Goals.md`, `Backlog.md`, and `Progress.md`
-  current; a stale `Goals.md` breaks `/bite-start` drift detection just as a stale
-  `Backlog.md` does.
+- **Jira is the source of truth for item state; the vault owns the why and the detail.**
+  Keep `Goals.md`, `Tasks/` and `Progress.md` current — a stale `Goals.md` breaks
+  `/bite-start` drift detection. `Backlog.md` is a generated mirror: regenerate it, never
+  hand-edit it, or the two systems disagree and `DESYNCED` fires every session.
+- **Never hand-edit a ticket's status in the Jira UI mid-loop** — `/bite-work` owns the
+  transitions. Editing both ends is how the mirror rots.
 - Follow the repo `CLAUDE.md` / `AGENTS.md`: yarn only, Radix-only UI (no native HTML),
   no `/api` routes unless it's an approved exception, TDD (failing test first), no
   hardcoded hex colors.

@@ -244,7 +244,7 @@ ticket that failed to create is worse than the reverse.
 ### 8.3 `/bite-work <id>`
 
 Accepts **either** a Jira key (`BITE-7`) or a legacy id (`BITE-016`); a legacy id is
-resolved to its Jira key via the `legacy-vault-###` label before anything else runs.
+resolved to its Jira key via the `legacy-BITE-###` label before anything else runs.
 This keeps muscle memory and existing vault links working after cutover.
 
 Adds transitions to the existing loop; all other steps unchanged.
