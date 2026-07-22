@@ -41,9 +41,10 @@ for i in $(seq 0 $((count-1))); do
   itype=$(itype_for "$type") || {
     echo "FAIL $legacy unknown type: $type"; failed=$((failed+1)); continue; }
 
-  # BITE-003 -> vault-003. A BITE-### marker would be ambiguous with the real
-  # Jira key BITE-3 now that the project key is BITE.
-  marker="vault-${legacy#*-}"
+  # The marker keeps the vault's own BITE-### vocabulary. Note it coexists with
+  # real Jira keys (BITE-003 the vault id vs BITE-3 the Jira key are different
+  # items) - BiteVault/JiraMap.md is the authoritative mapping.
+  marker="$legacy"
 
   existing=$(./scripts/jira.sh find-legacy "$legacy" 2>/dev/null)
   if [ -n "$existing" ]; then

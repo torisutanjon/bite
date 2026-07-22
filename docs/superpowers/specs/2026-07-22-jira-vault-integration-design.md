@@ -32,7 +32,7 @@ be authoritative for status. `/bite-work` must therefore drive transitions.
 | D2 | **`Backlog.md` becomes a generated mirror** | Regenerated from Jira on `/bite-start`; never hand-edited. Eliminates two-writer drift. |
 | D3 | **Jira key is the canonical ID going forward** | Legacy vault ids are preserved only as a label + mapping table, never minted again. |
 | D4 | **Project key is renamed `KAN` → `BITE`** (author, Jira UI — needs admin) | The board should read `BITE-##`. Prefix is derived from the project key; there is no per-ticket naming. Jira renumbers existing issues and redirects old `KAN-*` links. |
-| D4a | **Retired vault ids are marked `vault-###`, not `BITE-###`** | With the project key set to `BITE`, a `BITE-003` label would be indistinguishable from the Jira key `BITE-3` — which is a *different* item. `vault-003` is unambiguous. `JiraMap.md` still records the original `BITE-###` spelling. |
+| D4a | **Retired vault ids keep the `BITE-###` spelling** (revised 2026-07-22 after seeing the board) | Initially marked `vault-###` to avoid ambiguity with the Jira key `BITE-3`. Author preferred the vault's own vocabulary on the board, so 18 summaries and labels were migrated back. The ambiguity is accepted and mitigated by a prominent warning in `JiraMap.md`, which is the authoritative resolver. `find-legacy` accepts both spellings. |
 | D5 | **Auth = scoped API token, basic auth** | Verified empirically. See §3. |
 | D6 | **Writes use REST v2; reads use v3** | v3 requires ADF (nested JSON) for `description`; v2 accepts plain text. Avoids hand-building ADF. |
 | D7 | **`bite` label scopes every query** | Pre-existing `KAN-1..3` placeholders stay invisible without being mutated. Token has no delete scope regardless. |
@@ -121,19 +121,20 @@ bite                     ← scopes all queries (D7)
 type-<vault type>        ← exact original type
 goal-G1 | goal-G2 | goal-G3
 state-backlog | state-ready   ← only while status is To Do
-legacy-vault-###         ← backfilled items only (D4a)
+legacy-BITE-###          ← backfilled items only (D4a)
 ```
 
-Worked example, after the `BITE` key rename:
+Worked example, as built:
 
 ```
 Key:      BITE-8
-Summary:  [vault-003] Supabase foundation — install, clients, schema, RLS, seed
-Labels:   bite, type-feat, goal-G1, state-ready, legacy-vault-003
+Summary:  [BITE-003] Supabase foundation — install, clients, schema, RLS, seed
+Labels:   bite, type-feat, goal-G1, state-ready, legacy-BITE-003
 ```
 
-`BITE-8` is unambiguously the Jira key; `vault-003` is unambiguously the retired
-vault id. Neither can be misread as the other.
+⚠️ `BITE-8` is the Jira key; `BITE-003` is the vault id — **same prefix, different
+numbering systems**. `JiraMap.md` carries a warning banner and is the authoritative
+resolver. `jira.sh find-legacy` accepts either `BITE-003` or the historical `vault-003`.
 
 ---
 
@@ -177,7 +178,7 @@ Jira has no native "expected result" field, and creating a custom field requires
 admin scope the token lacks. It is therefore a description section.
 
 ```
-Summary:  [vault-003] Supabase foundation — install, clients, schema, RLS, seed
+Summary:  [BITE-003] Supabase foundation — install, clients, schema, RLS, seed
           └─ legacy prefix on backfilled items only; new items use plain title
 
 Description:
@@ -286,7 +287,7 @@ Expected totals, to be asserted after the run — a mismatch means the backfill 
 | **Total** | **18** |
 
 **Idempotency:** every create is preceded by
-`jql=labels="legacy-vault-###"`; a hit means skip. Re-running cannot produce
+`jql=labels="legacy-BITE-###"`; a hit means skip. Re-running cannot produce
 duplicates. The script reports created/skipped/failed per item and is resumable
 after partial failure.
 

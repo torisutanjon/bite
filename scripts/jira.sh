@@ -62,14 +62,14 @@ jql_scope() { printf 'project = "%s" AND labels = bite' "$JIRA_PROJECT_KEY"; }
 
 urlenc() { jq -rn --arg v "$1" '$v|@uri'; }
 
-# Vault ids are labelled `legacy-vault-003`, NOT `legacy-BITE-003`: with the
-# project key set to BITE, a BITE-003 marker would be ambiguous with the real
-# Jira key BITE-3. Accept either spelling from the caller and normalise.
+# Vault ids are labelled `legacy-BITE-003`, matching the vault's own vocabulary.
+# Note this DOES coexist with the real Jira key BITE-3, which is a different
+# item — see BiteVault/JiraMap.md for the authoritative mapping. Accept either
+# spelling from the caller (vault-003 is the historical form) and normalise.
 normalise_legacy() {
   case "$1" in
-    BITE-*|bite-*) printf 'vault-%s' "${1#*-}" ;;
-    vault-*)       printf '%s' "$1" ;;
-    *)             printf 'vault-%s' "$1" ;;
+    BITE-*|bite-*|vault-*) printf 'BITE-%s' "${1#*-}" ;;
+    *)                     printf 'BITE-%s' "$1" ;;
   esac
 }
 
@@ -149,6 +149,14 @@ cmd_transition() {
     "$(jq -n --arg id "$tid" '{transition:{id:$id}}')" >/dev/null
 }
 
+cmd_summary() {
+  require_env
+  local key="${1:-}" text="${2:-}"
+  { [ -z "$key" ] || [ -z "$text" ]; } && die "usage: jira.sh summary <key> <text>" 64
+  _api PUT "/rest/api/2/issue/${key}" \
+    "$(jq -n --arg s "$text" '{fields:{summary:$s}}')" >/dev/null
+}
+
 cmd_label() {
   require_env
   local key="${1:-}" action="${2:-}" label="${3:-}"
@@ -168,5 +176,6 @@ case "${1:-}" in
   create)      shift; cmd_create "$@" ;;
   transition)  shift; cmd_transition "$@" ;;
   label)       shift; cmd_label "$@" ;;
-  *) die "usage: jira.sh {check|list|find-legacy|create|transition|label}" 64 ;;
+  summary)     shift; cmd_summary "$@" ;;
+  *) die "usage: jira.sh {check|list|find-legacy|create|transition|label|summary}" 64 ;;
 esac
