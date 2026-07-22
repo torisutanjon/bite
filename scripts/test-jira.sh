@@ -29,6 +29,27 @@ out=$(./scripts/jira.sh check 2>&1); rc=$?
 check "check exits 0" "0" "$rc"
 case "$out" in *OK*) ok "reports OK";; *) bad "reports OK" "$out";; esac
 
+echo "== list =="
+out=$(./scripts/jira.sh list 2>&1); rc=$?
+check "list exits 0" "0" "$rc"
+
+if [ -n "$out" ]; then
+  cols=$(printf '%s\n' "$out" | head -1 | awk -F'\t' '{print NF}')
+else
+  cols=7   # empty result is valid pre-backfill; shape is asserted once rows exist
+fi
+check "list emits 7 tab-separated columns" "7" "$cols"
+
+# Exact key-column match: a substring test would false-positive on BITE-1x
+# once the backfill creates BITE-10..BITE-21.
+leaked=$(printf '%s\n' "$out" | awk -F'\t' '$1=="BITE-1"||$1=="BITE-2"||$1=="BITE-3"' | wc -l)
+check "excludes unlabelled placeholders" "0" "$leaked"
+
+echo "== find-legacy =="
+out=$(./scripts/jira.sh find-legacy BITE-999 2>&1); rc=$?
+check "unknown legacy id exits 0" "0" "$rc"
+check "unknown legacy id prints nothing" "" "$out"
+
 echo
 echo "passed=$PASS failed=$FAIL"
 [ "$FAIL" -eq 0 ]

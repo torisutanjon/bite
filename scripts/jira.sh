@@ -56,7 +56,53 @@ cmd_check() {
   printf 'OK %s reachable\n' "$JIRA_PROJECT_KEY"
 }
 
+# Every query is scoped to `labels = bite` so the pre-existing placeholder
+# issues (BITE-1..3) are never read, reported, or mutated.
+jql_scope() { printf 'project = "%s" AND labels = bite' "$JIRA_PROJECT_KEY"; }
+
+urlenc() { jq -rn --arg v "$1" '$v|@uri'; }
+
+# Vault ids are labelled `legacy-vault-003`, NOT `legacy-BITE-003`: with the
+# project key set to BITE, a BITE-003 marker would be ambiguous with the real
+# Jira key BITE-3. Accept either spelling from the caller and normalise.
+normalise_legacy() {
+  case "$1" in
+    BITE-*|bite-*) printf 'vault-%s' "${1#*-}" ;;
+    vault-*)       printf '%s' "$1" ;;
+    *)             printf 'vault-%s' "$1" ;;
+  esac
+}
+
+# TSV columns: key, legacy, issuetype, status, goal, state, summary
+cmd_list() {
+  require_env
+  local q; q=$(urlenc "$(jql_scope) ORDER BY created ASC")
+  _api GET "/rest/api/3/search/jql?jql=${q}&maxResults=200&fields=summary,status,issuetype,labels" \
+  | jq -r '
+      .issues[]? |
+      (.fields.labels // []) as $l |
+      [ .key,
+        ((first($l[] | select(startswith("legacy-"))) // "-") | sub("^legacy-";"")),
+        .fields.issuetype.name,
+        .fields.status.name,
+        ((first($l[] | select(startswith("goal-")))   // "-") | sub("^goal-";"")),
+        ((first($l[] | select(startswith("state-")))  // "-") | sub("^state-";"")),
+        .fields.summary
+      ] | @tsv'
+}
+
+cmd_find_legacy() {
+  require_env
+  [ -z "${1:-}" ] && die "usage: jira.sh find-legacy <BITE-### | vault-###>" 64
+  local marker; marker=$(normalise_legacy "$1")
+  local q; q=$(urlenc "$(jql_scope) AND labels = \"legacy-${marker}\"")
+  _api GET "/rest/api/3/search/jql?jql=${q}&maxResults=1&fields=summary" \
+  | jq -r '.issues[0].key // empty'
+}
+
 case "${1:-}" in
-  check) shift; cmd_check "$@" ;;
-  *) die "usage: jira.sh {check}" 64 ;;
+  check)       shift; cmd_check "$@" ;;
+  list)        shift; cmd_list "$@" ;;
+  find-legacy) shift; cmd_find_legacy "$@" ;;
+  *) die "usage: jira.sh {check|list|find-legacy}" 64 ;;
 esac
