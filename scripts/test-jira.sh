@@ -50,6 +50,25 @@ out=$(./scripts/jira.sh find-legacy BITE-999 2>&1); rc=$?
 check "unknown legacy id exits 0" "0" "$rc"
 check "unknown legacy id prints nothing" "" "$out"
 
+echo "== write guards (must not mutate anything) =="
+# FAKE-1 is used deliberately: every assertion below must fail argument
+# validation BEFORE any network call, so a nonexistent key is harmless.
+out=$(./scripts/jira.sh create 2>&1); rc=$?
+check "create with no args exits 64" "64" "$rc"
+
+out=$(./scripts/jira.sh transition FAKE-1 2>&1); rc=$?
+check "transition with no status exits 64" "64" "$rc"
+
+out=$(./scripts/jira.sh transition FAKE-1 "Nonexistent Status" 2>&1); rc=$?
+check "unknown status exits 64" "64" "$rc"
+case "$out" in *"Nonexistent Status"*) ok "unknown status is named";; *) bad "unknown status is named" "$out";; esac
+
+out=$(./scripts/jira.sh label FAKE-1 sideways foo 2>&1); rc=$?
+check "bad label action exits 64" "64" "$rc"
+
+out=$(./scripts/jira.sh create Feature "x" /nonexistent/desc.txt bite 2>&1); rc=$?
+check "missing description file exits 64" "64" "$rc"
+
 echo
 echo "passed=$PASS failed=$FAIL"
 [ "$FAIL" -eq 0 ]

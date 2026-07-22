@@ -100,9 +100,73 @@ cmd_find_legacy() {
   | jq -r '.issues[0].key // empty'
 }
 
+VALID_STATUSES="To Do, In Progress, Code Review, QA Review, Needs Revision, Ready for Production, Done"
+
+# The project workflow is fully connected (every status reaches every other),
+# so transition ids are global and need no per-issue lookup.
+# Verified 2026-07-22 against the live project.
+transition_id() {
+  case "$1" in
+    "To Do")                echo 11 ;;
+    "In Progress")          echo 21 ;;
+    "Code Review")          echo 31 ;;
+    "QA Review")            echo 41 ;;
+    "Needs Revision")       echo 3  ;;
+    "Ready for Production") echo 2  ;;
+    "Done")                 echo 51 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Writes go through REST v2: v3 requires the description as ADF (nested JSON),
+# whereas v2 accepts plain text. Avoids hand-building ADF for every ticket.
+cmd_create() {
+  require_env
+  local itype="${1:-}" summary="${2:-}" descfile="${3:-}"
+  { [ -z "$itype" ] || [ -z "$summary" ] || [ -z "$descfile" ]; } &&
+    die "usage: jira.sh create <issuetype> <summary> <description-file> [label...]" 64
+  shift 3
+  [ -f "$descfile" ] || die "description file not found: $descfile" 64
+
+  local labels='[]'
+  [ "$#" -gt 0 ] && labels=$(printf '%s\n' "$@" | jq -R . | jq -s .)
+
+  local body; body=$(jq -n \
+    --arg p "$JIRA_PROJECT_KEY" --arg s "$summary" \
+    --rawfile d "$descfile" --arg t "$itype" --argjson l "$labels" \
+    '{fields:{project:{key:$p},summary:$s,description:$d,issuetype:{name:$t},labels:$l}}')
+
+  _api POST "/rest/api/2/issue" "$body" | jq -r '.key'
+}
+
+cmd_transition() {
+  require_env
+  local key="${1:-}" status="${2:-}"
+  { [ -z "$key" ] || [ -z "$status" ]; } && die "usage: jira.sh transition <key> <status>" 64
+  local tid
+  tid=$(transition_id "$status") || die "unknown status: $status (valid: $VALID_STATUSES)" 64
+  _api POST "/rest/api/3/issue/${key}/transitions" \
+    "$(jq -n --arg id "$tid" '{transition:{id:$id}}')" >/dev/null
+}
+
+cmd_label() {
+  require_env
+  local key="${1:-}" action="${2:-}" label="${3:-}"
+  { [ -z "$key" ] || [ -z "$label" ]; } && die "usage: jira.sh label <key> add|remove <label>" 64
+  case "$action" in
+    add|remove) ;;
+    *) die "label action must be add or remove, got: $action" 64 ;;
+  esac
+  _api PUT "/rest/api/2/issue/${key}" \
+    "$(jq -n --arg a "$action" --arg l "$label" '{update:{labels:[{($a):$l}]}}')" >/dev/null
+}
+
 case "${1:-}" in
   check)       shift; cmd_check "$@" ;;
   list)        shift; cmd_list "$@" ;;
   find-legacy) shift; cmd_find_legacy "$@" ;;
-  *) die "usage: jira.sh {check|list|find-legacy}" 64 ;;
+  create)      shift; cmd_create "$@" ;;
+  transition)  shift; cmd_transition "$@" ;;
+  label)       shift; cmd_label "$@" ;;
+  *) die "usage: jira.sh {check|list|find-legacy|create|transition|label}" 64 ;;
 esac
