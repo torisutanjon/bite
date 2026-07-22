@@ -1,0 +1,341 @@
+[
+  {
+    "legacy": "BITE-000",
+    "type": "chore",
+    "goal": "G2",
+    "status": "Done",
+    "title": "Radix UI + landing + auth + dashboard UI scaffold",
+    "context": "The project needed a working UI surface before any data or auth work could be judged. Delivered across PRs #1-#4 as the initial scaffold: Radix Themes setup plus the landing page, auth screens, and the dashboard shell with stores, cart, checkout, orders and profile routes.",
+    "scope": "Radix UI + Theme foundation, landing page, login and sign-up screens, dashboard layout, and the customer routes. All screens presentational, using static placeholder data. NON-GOALS: no backend, no auth provider, no persistence.",
+    "expected": "Every primary customer route renders with Radix UI components and no native HTML elements, using placeholder data. The app is navigable end to end without a backend.",
+    "criteria": [
+      "Radix Themes configured with accentColor tomato",
+      "Landing, auth, and dashboard routes all render",
+      "Radix components used throughout; no native HTML elements",
+      "Shipped via PRs #1-#4"
+    ]
+  },
+  {
+    "legacy": "BITE-001",
+    "type": "test",
+    "goal": "G3",
+    "status": "Done",
+    "title": "Establish Jest + RTL test suite across pages",
+    "context": "The repo had no automated test coverage, so no change could be verified as non-regressive. This established the Jest + React Testing Library suite across the existing pages and brought the repo to its coverage gates. Landed via PR #6; the functions-coverage buffer was subsequently hardened because it sat at 95.03% against a 95% gate, a 0.03pt cushion.",
+    "scope": "jest.config.ts, jest.setup.ts, __mocks__/, lib/test-utils/, and 26 __tests__/ folders across app/ routes and shared components. Follow-up hardening added six tests covering untested handlers in PasswordInput, FilterSidebar and SignUpForm. NON-GOALS: no source changes in the hardening pass.",
+    "expected": "yarn test:coverage exits 0 with all four gates met repo-wide, and the functions metric carries a comfortable margin over the 95% threshold rather than a fractional one.",
+    "criteria": [
+      "258 tests across 58 suites green",
+      "Coverage gates met repo-wide: 99.66 stmts / 98.32 branch / 97.87 funcs / 99.66 lines",
+      "Functions margin widened from 0.03pt to 2.87pt",
+      "PasswordInput, FilterSidebar and SignUpForm at 100% on every metric",
+      "Shipped via PR #6 and PR #9"
+    ]
+  },
+  {
+    "legacy": "BITE-004",
+    "type": "chore",
+    "goal": "G3",
+    "status": "Done",
+    "title": "Add Playwright for UI render-and-measure",
+    "context": "Visual and layout claims were being made by reading source rather than observing a real browser, which is how the fidelity gaps in the Figma gap run went unnoticed. Playwright was added so UI changes can be measured rather than reasoned about. Merged to develop via the BITE-006 PR.",
+    "scope": "@playwright/test, playwright.config, a test:e2e script, a CI workflow, Jest ignore configuration for tests/, and a homepage render-and-measure spec. NON-GOALS: no broad E2E coverage of user journeys.",
+    "expected": "yarn test:e2e drives a real browser and measures rendered geometry at defined viewports, so UI verification no longer depends on reading source.",
+    "criteria": [
+      "@playwright/test installed and configured",
+      "test:e2e script available",
+      "CI workflow runs the suite",
+      "jest.config.ts ignores tests/ so the two runners do not collide",
+      "Homepage render-and-measure spec passing at mobile 390 and desktop 1440"
+    ]
+  },
+  {
+    "legacy": "BITE-006",
+    "type": "feat",
+    "goal": "G2",
+    "status": "Done",
+    "title": "Refactor / revamp the homepage (landing page)",
+    "context": "The landing page shipped in the initial scaffold but did not reflect the premium-minimal direction, and had accumulated presentation debt. This revamped all five sections and added a responsive mobile navbar.",
+    "scope": "Restyle all five landing sections to the premium-minimal direction, clean up presentation debt, and add a responsive mobile navbar. Verified with Playwright render-and-measure at mobile and desktop. NON-GOALS: no data wiring.",
+    "expected": "The landing page renders in the premium-minimal style at both mobile 390 and desktop 1440, with a working responsive navbar, and the measurements are confirmed in a real browser rather than inferred from source.",
+    "criteria": [
+      "All five sections restyled",
+      "Responsive mobile navbar added",
+      "Presentation debt cleaned up",
+      "Playwright render-and-measure passing at 390 and 1440",
+      "252 tests green; PR review feedback addressed",
+      "Merged to develop"
+    ]
+  },
+  {
+    "legacy": "BITE-003",
+    "type": "feat",
+    "goal": "G1",
+    "status": "Ready",
+    "title": "Supabase foundation — install, clients, schema, RLS, seed",
+    "context": "Nothing Supabase exists in the repo as of develop @ 7c032ee: no packages, no supabase/ directory, no migrations, no lib/supabase/. Restaurant data lives as module-level consts inside page files (stores/page.tsx:16-79 and the menu child components). This is the first item that moves G1, which currently has zero completions while nine G2 polish items queue ahead of it. Originally a one-line row bundling install, schema, RLS, seed and two page rewrites; split on 2026-07-21 into this foundation item plus vault-016 and vault-017.",
+    "scope": "Install @supabase/ssr and @supabase/supabase-js via yarn. Create all four clients in lib/supabase/ (server, client, service, middleware). Run Supabase locally via the CLI in WSL2. Define stores, cuisine_tags, store_cuisines, menu_categories and menu_items as migrations. Enable RLS on every table with public-read and no-public-write. Add the indexes each filter touches. Seed with today's placeholder content verbatim. Generate lib/types/supabase.ts. NON-GOALS: nothing in app/ changes; no page imports a Supabase client. The root middleware.ts that invokes the middleware helper belongs to vault-002, not here.",
+    "expected": "A developer can run supabase start, apply migrations, seed, and query the stores table from a scratch Server Component, getting back the same restaurants the UI currently fakes. All four typed clients import and type-check. Every table has an RLS policy. No route under app/ has changed.",
+    "criteria": [
+      "@supabase/ssr and @supabase/supabase-js installed via yarn",
+      "supabase init committed; supabase start works locally in WSL2",
+      "Migrations create stores, cuisine_tags, store_cuisines, menu_categories, menu_items",
+      "Schema changes only via migration files, never Studio",
+      "RLS enabled on every table: public read gated on is_active, no public write",
+      "auth.uid() wrapped as (select auth.uid()) in any policy referencing it",
+      "Indexes created for rating, price_level, delivery_time_max, slug, name trigram, store_cuisines and menu_items ordering",
+      "Seed reproduces today's placeholder content verbatim including picsum image URLs",
+      "Money stored as integer cents, never floats",
+      "All four clients exist in lib/supabase/ and type-check",
+      "lib/types/supabase.ts generated and committed",
+      "SUPABASE_SERVICE_ROLE_KEY referenced only in lib/supabase/service.ts",
+      "@supabase/auth-helpers-nextjs is NOT introduced (forbidden by CLAUDE.md)",
+      "Nothing in app/ is modified",
+      "TDD: failing test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-002",
+    "type": "feat",
+    "goal": "G1",
+    "status": "Ready",
+    "title": "Wire Supabase auth to login/sign-up UI",
+    "context": "The login and sign-up screens shipped as UI in PR #2 but call no auth provider — the forms are inert. This wires them to Supabase Auth. Blocked by vault-003, which now owns the package install, the four clients, and the middleware helper.",
+    "scope": "Wire the existing login and sign-up forms to Supabase Auth. Add the root middleware.ts that invokes the updateSession helper created in vault-003, so sessions refresh. Handle auth error states in the UI. NON-GOALS: no 2FA (that is vault-008), no redesign of the auth screens.",
+    "expected": "A user can sign up, receive a session, log in, and stay logged in across navigation as the middleware refreshes the session. Auth failures surface as sanitized messages in the UI rather than stack traces.",
+    "criteria": [
+      "Login form calls Supabase Auth and establishes a session",
+      "Sign-up form creates an account",
+      "Root middleware.ts invokes updateSession so sessions refresh",
+      "Auth errors surface as sanitized user-facing messages",
+      "@supabase/auth-helpers-nextjs is NOT used",
+      "TDD: failing test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-016",
+    "type": "feat",
+    "goal": "G1",
+    "status": "Backlog",
+    "title": "Wire /stores feed to live data",
+    "context": "app/(dashboard)/stores/page.tsx:16-79 holds three module-level consts (featuredRestaurant, recommendedOthers, allRestaurants). The page is already an async Server Component and already accepts searchParams, but line 87 reads 'await searchParams;' with a comment about future filtering — the params are awaited and discarded. FilterSidebar and FilterTabs render but are inert, owning local useState. Split out of the original BITE-003 on 2026-07-21. Blocked by vault-003.",
+    "scope": "Replace the three hardcoded consts with real queries against the Supabase schema. Make the filter controls actually filter, driven by URL search params so the page stays a Server Component and re-queries on navigation. FilterSidebar and FilterTabs stop owning state and instead read the URL and router.push new values. NON-GOALS: no TanStack Query — that is deliberately deferred to vault-005. Layout fidelity is vault-010; sequence this first so one PR does not touch both data and layout.",
+    "expected": "Different filter and search selections produce different result sets from the database, reflected in the URL. The three hardcoded consts and the dead 'await searchParams' line are gone. The page remains a Server Component.",
+    "criteria": [
+      "featuredRestaurant, recommendedOthers and allRestaurants consts removed",
+      "The dead 'await searchParams' line at page.tsx:87 is gone and params are used",
+      "Filters are URL-driven; the server re-queries on navigation",
+      "Column-specific select(), never .select('*')",
+      "!inner join for cuisine tags; no N+1 per card",
+      ".range() with { count: 'exact' } returning { success, data, pagination }",
+      "?q= maps to .ilike() on stores.name against the trigram index",
+      "Page remains a Server Component; no TanStack Query introduced",
+      "TDD: failing test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-017",
+    "type": "feat",
+    "goal": "G1",
+    "status": "Backlog",
+    "title": "Wire /stores/[id] detail + menu to live data",
+    "context": "app/(dashboard)/stores/[id]/page.tsx:46 awaits params and throws the id away, so every store id renders 'The Urban Bistro & Grill' with identical stats. Menu content is hardcoded across MenuTabs (four tabs), AppetizersGrid (2 items) and MainsList (2 items) — and the two menu sections are hardcoded to two specific categories in differently shaped components. Split out of the original BITE-003 on 2026-07-21. Blocked by vault-003.",
+    "scope": "Use the route param to look up the store by slug and render it. Drive the hero, badge, description and the full stats bar from the row. Generalise MenuTabs, AppetizersGrid and MainsList into a category-driven renderer fed by menu_categories and menu_items. NON-GOALS: GuestExperiences reviews stay hardcoded — there is no reviews table. Hero-height fidelity is vault-011; sequence this first.",
+    "expected": "Different store ids render different stores with their own menus. An unknown slug returns a 404 through notFound() rather than rendering a default store. The menu tabs and sections come from the database, not a hardcoded four-tab const.",
+    "criteria": [
+      "Route param is used — different ids render different stores",
+      "Store lookup by slug via .maybeSingle(), not .single()",
+      "Unknown slug triggers notFound()",
+      "Hero, badge, description and the whole stats bar come from the row",
+      "MenuTabs renders from menu_categories, not a hardcoded const; scroll-spy preserved",
+      "Menu sections are category-driven, not hardcoded to appetizers and mains",
+      "One joined query, no N+1",
+      "TDD: failing test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-005",
+    "type": "feat",
+    "goal": "G1",
+    "status": "Backlog",
+    "title": "TanStack Query hooks for server state",
+    "context": "CLAUDE.md mandates TanStack Query for client-side server state and forbids direct fetch() in client components, but the package is not installed and no hooks exist. vault-016 deliberately uses URL-driven server queries instead so this item stays genuinely deferred rather than half-pulled-in.",
+    "scope": "Install TanStack Query, add the provider to the tree via buildProviderTree, and create the first useFetch<Entity> hooks under lib/query/hooks/. NON-GOALS: does not retrofit the server-rendered feed built in vault-016.",
+    "expected": "Client components fetch server state through useFetch hooks with correct query keys and cache invalidation, and no client component calls fetch() directly.",
+    "criteria": [
+      "TanStack Query installed via yarn",
+      "Provider composed via buildProviderTree in lib/utils/provider.ts",
+      "Hooks live in lib/query/hooks/ named useFetch<Entity> / useUpdate<Entity>",
+      "Query keys are arrays with entity name and dependencies",
+      "Mutations invalidate the relevant query keys",
+      "enabled used for dependent queries",
+      "No direct fetch() in client components",
+      "TDD: failing test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-007",
+    "type": "feat",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Order History populated view (/orders)",
+    "context": "Found in the Figma gap run. /orders renders only OrdersEmptyState. The design has two Order History screens — an empty state (built) and a populated feed (not built). Figma node 2:2260. The populated screen drops the sidebar the empty state uses, in favour of a centred 1152px column.",
+    "scope": "Build the populated order feed: hero title section, search and filter controls, the order feed itself, and a pagination / load-more control. Switch to the design's centred 1152px column for the populated case while keeping the empty state for zero orders. NON-GOALS: presentation only — static placeholder orders, no live querying. Live data is vault-003 / vault-005.",
+    "expected": "With orders present, /orders renders the populated feed in a centred 1152px column with search, filters and pagination controls; with none, the existing empty state still shows.",
+    "criteria": [
+      "Populated order feed renders",
+      "Empty state still shows when there are no orders",
+      "Search and filter controls present (presentation only)",
+      "Pagination / load-more control present",
+      "Layout switches to the centred 1152px column for the populated case",
+      "Radix UI only; no hardcoded hex; font-main / font-accent only",
+      "Responsive verified in a real browser via Playwright, not reasoned from source",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-008",
+    "type": "feat",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "2FA Verification screen",
+    "context": "Found in the Figma gap run. Figma node 2:626 is a 2FA Verification screen with no counterpart in app/. Two structural notes: the nav is deliberately suppressed (the designer labelled it 'Transactional Context' — a verification screen should not offer escape routes), and the footer is a minimal variant. Both imply a small shared transactional shell rather than reusing existing chrome. NOTE: this item's goal is contested — filed G2 per the gap-run default, but it is arguably G1 since 2FA is auth functionality rather than polish. The vault recommendation is to keep the UI shell at G2 and let the real verification flow land with vault-002's G1 work.",
+    "scope": "Build the UI shell only: verification card with code-entry inputs, suppressed-nav header, minimal footer. Route suggested as app/auth/verify/, to be decided at discuss time. NON-GOALS: no submit wiring — the input stays inert until vault-002 lands.",
+    "expected": "A verification screen renders with code-entry inputs, no standard navigation chrome, and the minimal footer variant. The inputs accept text but submit nothing.",
+    "criteria": [
+      "Verification card renders with code-entry inputs (presentation only)",
+      "Suppressed-nav header and minimal footer — does not reuse standard chrome",
+      "Route decided at discuss time",
+      "Radix UI only; no hardcoded hex; font-main / font-accent only",
+      "Responsive verified in a real browser via Playwright",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-009",
+    "type": "feat",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Saved Addresses page",
+    "context": "Found in the Figma gap run. Figma node 2:1683 is a Saved Addresses screen with no counterpart in app/. Two elements have no precedent in the codebase: a bento-grid layout for address cards, and a breadcrumb trail — no breadcrumb component exists in app/components/. Both are new shared primitives.",
+    "scope": "Build the presentation shell: breadcrumbs and header, address bento grid, quick help section. Decide at discuss time whether the bento grid and breadcrumb land here or get extracted as shared primitives up front. Route suggested as app/(dashboard)/addresses/. NON-GOALS: static placeholder addresses only; persistence depends on vault-003.",
+    "expected": "A Saved Addresses page renders address cards in the design's bento grid, with a breadcrumb trail and a quick help section, using placeholder data.",
+    "criteria": [
+      "Address cards render in the bento grid layout from the design",
+      "Breadcrumb trail present",
+      "Quick Help section present",
+      "Route decided at discuss time",
+      "Radix UI only; no hardcoded hex; font-main / font-accent only",
+      "Responsive verified in a real browser via Playwright",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-010",
+    "type": "enhancement",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Home Feed fidelity pass (/stores)",
+    "context": "Found in the Figma gap run against node 2:2. /stores is structurally close to the design but three elements drift: the filter sidebar is w-56 (224px) against a designed 288px; there is no Footer, making /stores the only customer route that omits it while every other built page renders it; and the design's 400px right-side cart drawer overlay is absent. The 288px sidebar also appears in the /orders and /profile designs, so it looks like a system-wide value rather than a per-page one.",
+    "scope": "Widen the filter sidebar to 288px, or introduce a shared sidebar token and apply it consistently. Add Footer to /stores. Decide at discuss time whether the cart drawer overlay is built here or split out — it is interaction, not just styling. Check mobile 390 and iPad 1280 variants. NON-GOALS: no data wiring. Sequence AFTER vault-016 so one PR does not touch both layout and data fetching.",
+    "expected": "At 1280 the filter sidebar measures 288px, Footer renders on /stores as it does on every other customer route, and the cart drawer decision is recorded. Measurements confirmed in a real browser.",
+    "criteria": [
+      "Filter sidebar width matches the design at 288px, or a shared sidebar token is introduced and applied consistently",
+      "Footer renders on /stores",
+      "Cart drawer overlay decision made at discuss time — built here or split out",
+      "Mobile 390 and iPad 1280 variants checked against the design",
+      "Radix UI only; no hardcoded hex",
+      "Render-and-measure verified in a real browser via Playwright at 390 and 1280",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-011",
+    "type": "enhancement",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Restaurant Details fidelity pass (/stores/[id])",
+    "context": "Found in the Figma gap run against node 2:699. The hero is designed at 500px tall but the build renders h-64 / md:h-72 — 256px mobile, 288px desktop. That is roughly 40% short and materially changes the screen's first impression, since the design leads with a large immersive food image. A secondary, lower-confidence observation: the design has a full 1152x96 Restaurant Info Bar where the build floats a stats card over the hero with -mt-6.",
+    "scope": "Reconcile the hero height with the design's 500px, or record a documented decision to keep the shorter treatment. Confirm the info-bar treatment against the design screenshot before altering it — the current floating treatment was deliberate and shipped as part of the BITE-006-era polish. Check mobile 390 and iPad 1280 variants. NON-GOALS: no data wiring. Sequence AFTER vault-017.",
+    "expected": "The hero measures the agreed height in a real browser at desktop, and any change to the info bar is made only after a visual comparison rather than from frame geometry alone.",
+    "criteria": [
+      "Hero height reconciled with the design at 500px desktop, or a documented decision to keep the shorter treatment with rationale",
+      "Info bar treatment confirmed against the design screenshot before altering",
+      "Mobile 390 and iPad 1280 variants checked against the design",
+      "Radix UI only; no hardcoded hex",
+      "Render-and-measure verified in a real browser via Playwright at 390 and 1280",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-012",
+    "type": "enhancement",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Shopping Cart summary column width (/cart)",
+    "context": "Found in the Figma gap run against node 2:2035. The /cart summary column renders at w-72 (288px) where the design specifies 352px — a 64px shortfall. /checkout uses the identical w-72 sticky summary, so if 352px is correct here it is probably correct there too.",
+    "scope": "Widen the /cart summary column to 352px. Audit /checkout for the same drift and keep the two consistent, considering a shared width token rather than two literals. Preserve sticky behaviour. NON-GOALS: no layout restructure, no new breakpoints.",
+    "expected": "At 1280 the /cart summary column measures 352px, matching the design, /checkout is consistent with it, and the sticky behaviour is unchanged.",
+    "criteria": [
+      "Summary column width reconciled with the design at 352px",
+      "/checkout summary checked for the same drift and kept consistent",
+      "Sticky behaviour preserved",
+      "Radix UI only; no hardcoded hex",
+      "Render-and-measure verified in a real browser via Playwright",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-013",
+    "type": "enhancement",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Login legal strings footer (/auth/login)",
+    "context": "Found in the Figma gap run against node 2:988. /auth/login matches the design's 50/50 split, but the design places a 640x31 legal-strings footer (Terms / Privacy) at the bottom of the form column and the build has none. The gap run also surfaced a hardcoded inline gradient hex on this page, which violates the CLAUDE.md rule against hardcoded hex values.",
+    "scope": "Add the legal-strings footer to the login form column. Replace the hardcoded inline gradient hex with the CSS variable aliases via Tailwind. NON-GOALS: no change to the split layout, which already matches.",
+    "expected": "The login form column ends with a legal-strings footer matching the design, and no hardcoded hex value remains on the page.",
+    "criteria": [
+      "Legal-strings footer renders at the bottom of the form column",
+      "Hardcoded inline gradient hex replaced with CSS variable aliases",
+      "Radix UI only; font-main / font-accent only",
+      "Render-and-measure verified in a real browser via Playwright",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-014",
+    "type": "enhancement",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Sign Up floating help button (/auth/sign-up)",
+    "context": "Found in the Figma gap run against node 2:1062. /auth/sign-up matches the design's split layout — the design frame is even named 'Visible on MD and larger', matching the built hidden md:flex — but the design's 56x56 floating circular help button is absent. The gap run also surfaced a hardcoded hex #f5ede6 on this page.",
+    "scope": "Add the 56x56 floating circular help button. Replace the hardcoded hex #f5ede6 with the CSS variable aliases via Tailwind. NON-GOALS: no change to the split layout or its breakpoint, which already match the design intent.",
+    "expected": "A 56x56 circular help button floats on the sign-up screen as designed, and no hardcoded hex value remains on the page.",
+    "criteria": [
+      "56x56 floating circular help button renders",
+      "Hardcoded hex #f5ede6 replaced with CSS variable aliases",
+      "Radix UI only; font-main / font-accent only",
+      "Render-and-measure verified in a real browser via Playwright",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  },
+  {
+    "legacy": "BITE-015",
+    "type": "enhancement",
+    "goal": "G2",
+    "status": "Backlog",
+    "title": "Persistent floating cart summary",
+    "context": "Found in the Figma gap run. A persistent floating cart pill ('View Cart') recurs across landing (22:2), order history (2:2260, 254x73) and as a shared instance (2:11005, 384x100). Appearing under three names suggests one shared component rather than per-screen one-offs; the size variance may be a responsive variant pair. Related: /stores also lacks the design's 400px right-side cart drawer overlay (see vault-010) — the pill and drawer are plausibly two halves of one pattern where the pill summons the drawer. This is the largest-scope item of the fidelity group.",
+    "scope": "Resolve the relationship between the floating pill and the cart drawer at discuss time, then extract a single shared component and render it on the screens where the design shows it. Include the item-count badge. NON-GOALS: presentation only — the cart count stays placeholder until state lands with vault-003 / vault-005.",
+    "expected": "One shared floating cart component renders on landing, order history and the feed with an item-count badge, and its relationship to the cart drawer is a recorded decision rather than an open question.",
+    "criteria": [
+      "Relationship between floating pill and cart drawer resolved at discuss time",
+      "Single shared component extracted — not duplicated per screen",
+      "Renders on the screens where the design shows it: landing, order history, feed",
+      "Item-count badge present",
+      "Radix UI only; no hardcoded hex; pill shape per design system (rounded-full)",
+      "Render-and-measure verified in a real browser via Playwright at 390 and 1280",
+      "TDD: failing RTL test first; coverage gates hold (90/85/95/90)"
+    ]
+  }
+]
