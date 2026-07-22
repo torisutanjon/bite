@@ -30,8 +30,9 @@ be authoritative for status. `/bite-work` must therefore drive transitions.
 |---|---|---|
 | D1 | **Jira is primary; the vault enriches** | One writer per field. Jira owns id/title/status/type/description. Vault owns `Goals.md`, `Tasks/`, `Fixes/`, `Sessions/`, `Progress.md`, `Decisions/`. |
 | D2 | **`Backlog.md` becomes a generated mirror** | Regenerated from Jira on `/bite-start`; never hand-edited. Eliminates two-writer drift. |
-| D3 | **Jira key is the canonical ID going forward** | Legacy `BITE-###` is preserved only as a label + mapping table, never minted again. |
-| D4 | **Project key is `KAN`** (pre-existing) | No visual collision with `BITE-###`, so the original collision risk is moot. |
+| D3 | **Jira key is the canonical ID going forward** | Legacy vault ids are preserved only as a label + mapping table, never minted again. |
+| D4 | **Project key is renamed `KAN` → `BITE`** (author, Jira UI — needs admin) | The board should read `BITE-##`. Prefix is derived from the project key; there is no per-ticket naming. Jira renumbers existing issues and redirects old `KAN-*` links. |
+| D4a | **Retired vault ids are marked `vault-###`, not `BITE-###`** | With the project key set to `BITE`, a `BITE-003` label would be indistinguishable from the Jira key `BITE-3` — which is a *different* item. `vault-003` is unambiguous. `JiraMap.md` still records the original `BITE-###` spelling. |
 | D5 | **Auth = scoped API token, basic auth** | Verified empirically. See §3. |
 | D6 | **Writes use REST v2; reads use v3** | v3 requires ADF (nested JSON) for `description`; v2 accepts plain text. Avoids hand-building ADF. |
 | D7 | **`bite` label scopes every query** | Pre-existing `KAN-1..3` placeholders stay invisible without being mutated. Token has no delete scope regardless. |
@@ -120,8 +121,19 @@ bite                     ← scopes all queries (D7)
 type-<vault type>        ← exact original type
 goal-G1 | goal-G2 | goal-G3
 state-backlog | state-ready   ← only while status is To Do
-legacy-BITE-###          ← backfilled items only
+legacy-vault-###         ← backfilled items only (D4a)
 ```
+
+Worked example, after the `BITE` key rename:
+
+```
+Key:      BITE-8
+Summary:  [vault-003] Supabase foundation — install, clients, schema, RLS, seed
+Labels:   bite, type-feat, goal-G1, state-ready, legacy-vault-003
+```
+
+`BITE-8` is unambiguously the Jira key; `vault-003` is unambiguously the retired
+vault id. Neither can be misread as the other.
 
 ---
 
@@ -154,7 +166,7 @@ wikilinks stay resolvable permanently.
 ```
 | Jira | Legacy | Title |
 |------|--------|-------|
-| KAN-4 | BITE-000 | Radix UI + landing + auth + dashboard UI scaffold |
+| BITE-4 | BITE-000 | Radix UI + landing + auth + dashboard UI scaffold |
 ```
 
 ---
@@ -165,7 +177,7 @@ Jira has no native "expected result" field, and creating a custom field requires
 admin scope the token lacks. It is therefore a description section.
 
 ```
-Summary:  [BITE-003] Supabase foundation — install, clients, schema, RLS, seed
+Summary:  [vault-003] Supabase foundation — install, clients, schema, RLS, seed
           └─ legacy prefix on backfilled items only; new items use plain title
 
 Description:
@@ -223,15 +235,15 @@ ticket that failed to create is worse than the reverse.
 1. resolve Goal (G#) — hard gate, `no-goal` still blocks and asks
 2. draft title / description / expected result
 3. SHOW the draft, wait for explicit confirmation      ← write gate
-4. jira.sh create → new key (e.g. KAN-22)
-5. write vault: Backlog.md row + Tasks/KAN-22.md
+4. jira.sh create → new key (e.g. BITE-22)
+5. write vault: Backlog.md row + Tasks/BITE-22.md
 6. STOP — does not start work
 ```
 
 ### 8.3 `/bite-work <id>`
 
-Accepts **either** a Jira key (`KAN-7`) or a legacy id (`BITE-016`); a legacy id is
-resolved to its Jira key via the `legacy-BITE-###` label before anything else runs.
+Accepts **either** a Jira key (`BITE-7`) or a legacy id (`BITE-016`); a legacy id is
+resolved to its Jira key via the `legacy-vault-###` label before anything else runs.
 This keeps muscle memory and existing vault links working after cutover.
 
 Adds transitions to the existing loop; all other steps unchanged.
@@ -250,7 +262,7 @@ Adds transitions to the existing loop; all other steps unchanged.
 
 ## 9. Backfill (one-time)
 
-18 tickets: 14 open + 4 Done. Creates `KAN-4` … `KAN-21`.
+18 tickets: 14 open + 4 Done. Creates `BITE-4` … `BITE-21`.
 
 | Vault | Type → Jira | Target status |
 |---|---|---|
@@ -274,7 +286,7 @@ Expected totals, to be asserted after the run — a mismatch means the backfill 
 | **Total** | **18** |
 
 **Idempotency:** every create is preceded by
-`jql=labels="legacy-BITE-###"`; a hit means skip. Re-running cannot produce
+`jql=labels="legacy-vault-###"`; a hit means skip. Re-running cannot produce
 duplicates. The script reports created/skipped/failed per item and is resumable
 after partial failure.
 
@@ -322,5 +334,5 @@ Shell tooling, so no Jest involvement and no impact on coverage gates.
 - Migrating `Fixes/`, `Sessions/`, `Decisions/` into Jira — they stay vault-only.
 - Jira Epics for goals G1–G3 (possible later; not needed now).
 - Sprints/boards/estimates.
-- Deleting or editing the `KAN-1..3` placeholders.
+- Deleting or editing the three placeholders (`BITE-1..3`, formerly `KAN-1..3`).
 - Two-way sync of `Tasks/` note bodies — the vault remains authoritative there.

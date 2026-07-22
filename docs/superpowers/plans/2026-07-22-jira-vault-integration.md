@@ -20,7 +20,7 @@
 - **`/rest/api/3/myself` is out of scope and returns 401 by design.** Never use it as a health check.
 - **Transition IDs are global** (workflow is fully connected): `11` To Do · `21` In Progress · `31` Code Review · `41` QA Review · `3` Needs Revision · `2` Ready for Production · `51` Done.
 - **Every JQL query is scoped with `AND labels = bite`** so pre-existing `KAN-1`, `KAN-2`, `KAN-3` are never touched or reported.
-- **Project key is `KAN`** (from `$JIRA_PROJECT_KEY`), not `BT`.
+- **Project key is read from `$JIRA_PROJECT_KEY`** — never hardcoded. It is `KAN` until the author renames it to `BITE` in the Jira UI; the adapter is unaffected either way. Task 5 must not run before the rename, because created keys are permanent.
 - Tests are plain shell (`bats` is not installed). Keep them out of any `__tests__/` directory so Jest never sees them.
 
 ## File Structure
@@ -302,14 +302,14 @@ echo "== write guards (no network mutation) =="
 out=$(./scripts/jira.sh create 2>&1); rc=$?
 check "create with no args exits 64" "64" "$rc"
 
-out=$(./scripts/jira.sh transition KAN-1 2>&1); rc=$?
+out=$(./scripts/jira.sh transition FAKE-1 2>&1); rc=$?
 check "transition with no status exits 64" "64" "$rc"
 
-out=$(./scripts/jira.sh transition KAN-1 "Nonexistent Status" 2>&1); rc=$?
+out=$(./scripts/jira.sh transition FAKE-1 "Nonexistent Status" 2>&1); rc=$?
 check "unknown status exits 64" "64" "$rc"
 case "$out" in *"Nonexistent Status"*) ok "unknown status is named";; *) bad "unknown status is named" "$out";; esac
 
-out=$(./scripts/jira.sh label KAN-1 sideways foo 2>&1); rc=$?
+out=$(./scripts/jira.sh label FAKE-1 sideways foo 2>&1); rc=$?
 check "bad label action exits 64" "64" "$rc"
 ```
 
@@ -540,7 +540,7 @@ Create `scripts/jira-backfill.sh`:
 ```bash
 #!/usr/bin/env bash
 # One-time backfill of BiteVault items into Jira. Idempotent: an item whose
-# legacy-BITE-### label already exists in Jira is skipped, so re-running
+# legacy-vault-### label already exists in Jira is skipped, so re-running
 # cannot create duplicates.
 #
 # Dry-run is the DEFAULT. --execute performs irreversible writes: this token
@@ -740,7 +740,7 @@ Do ONLY this, then stop:
    key. **Each item is rendered exactly once.** On any conflict, Jira wins.
 5. **Report**, grouped in this order — In Progress → Ready → Backlog → Done.
    `Ready` vs `Backlog` is distinguished by the `state-ready` / `state-backlog`
-   label, since Jira has no `Ready` status. Show `KAN-## (BITE-###) [type] title — G#`.
+   label, since Jira has no `Ready` status. Show `<KEY> (vault-###) [type] title — G#`.
 6. **Drift report.** Print each class, or `none` if empty:
    - `UNFILED` — vault row with no Jira ticket
    - `UNTRACKED` — bite-labelled ticket with no vault row
@@ -804,7 +804,7 @@ Do ONLY this, then stop:
    a real tracker and the token cannot delete what it creates.
 5. **Create it:** write the description to a temp file, then
    `./scripts/jira.sh create <IssueType> "<title>" <descfile> bite type-<type> goal-<G#> state-backlog`
-   Capture the returned key (e.g. `KAN-22`).
+   Capture the returned key (e.g. `BITE-22`).
 6. **Write the vault:** add the row to `Backlog.md` under **Backlog** keyed by the
    Jira key, and create `Tasks/<KEY>.md` from the template in `Tasks/README.md`.
 7. **STOP.** This only files the item — I will run `/bite-work <KEY>` when ready.
@@ -842,7 +842,7 @@ Append to `.claude/commands/bite-work.md` (leave all existing steps intact):
 ```markdown
 ## Jira status writeback
 
-`/bite-work` accepts **either** a Jira key (`KAN-7`) or a legacy id (`BITE-016`);
+`/bite-work` accepts **either** a Jira key (`BITE-7`) or a legacy id (`BITE-016`);
 resolve a legacy id first with `./scripts/jira.sh find-legacy BITE-016`.
 
 Jira is the source of truth for status, so the loop must move the ticket:
