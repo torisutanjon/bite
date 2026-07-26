@@ -72,14 +72,14 @@ The detail page renders a `"Gourmet Selection"` badge on Urban Bistro. The `stor
 
 ---
 
-### Task 1: Two Jest projects, running in parallel
+### Task 2: Two Jest projects, running in parallel
 
 **Files:**
 - Modify: `jest.config.ts` (whole file)
 - Modify: `package.json:26-31` (scripts block)
 
 **Interfaces:**
-- Consumes: nothing.
+- Consumes: the three env vars in `.env.local` from Task 1 — `next/jest` loads them via `@next/env`, and this task's spec asserts they resolve.
 - Produces: a `db` Jest project matching `<rootDir>/supabase/__tests__/**/*.test.ts` in the `node` environment; a `unit` project owning everything else. Scripts `yarn test`, `yarn test:db`, `yarn test:all`, `yarn test:coverage`.
 
 `next/jest` returns an **async factory**, not a config object, so projects must each be built by awaiting `createJestConfig(...)()` and composed under a top-level async default export. Coverage options are global-only in Jest — they must live at the root, never inside a project, or Jest warns and ignores them.
@@ -181,7 +181,7 @@ export default config
 - [ ] **Step 5: Verify the db project passes and the unit suite is untouched**
 
 Run: `yarn test:db`
-Expected: PASS, 2 tests, `db` displayName shown. (`next/jest` loads `.env.local` via `@next/env`, which is why the env vars resolve — Task 2 puts them there. If this fails on undefined env vars, run Task 2 first, then return.)
+Expected: PASS, 2 tests, `db` displayName shown. (`next/jest` loads `.env.local` via `@next/env`, which is why the env vars resolve — Task 1 put them there.)
 
 Run: `yarn test`
 Expected: PASS, 258 tests / 58 suites, `unit` displayName shown.
@@ -198,7 +198,11 @@ git commit -m "BITE-8: split jest into parallel unit and db projects"
 
 ---
 
-### Task 2: Env plumbing and pinned CLI
+### Task 1: Env plumbing and pinned CLI
+
+> **Execution order note:** this task is numbered 1 and runs first, but appears
+> second in this document. Everything downstream needs the env vars and the
+> pinned CLI, including Task 2's spec.
 
 **Files:**
 - Create: `.env.example`
@@ -242,7 +246,16 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
 ```
 
-- [ ] **Step 5: Append the real values to `.env.local`**
+- [ ] **Step 5: Pin the Supabase CLI**
+
+The global binary is 2.78.1 and **cannot parse this repo's `config.toml`** (it rejects `experimental.pgdelta` and `config.config.local_smtp`, both written by 2.109.1). Pinning makes `yarn supabase` deterministic, and Step 6 depends on it.
+
+```bash
+yarn add -D supabase@2.109.1
+yarn supabase --version   # expect 2.109.1
+```
+
+- [ ] **Step 6: Append the real values to `.env.local`**
 
 **Append. Do not rewrite** — the Jira credentials live in this file.
 
@@ -263,17 +276,6 @@ grep -c '^JIRA_' .env.local   # expect 5
 grep -c '^JIRA_' .env.local          # expect 5
 grep -c '^NEXT_PUBLIC_SUPABASE\|^SUPABASE_SECRET' .env.local   # expect 3
 grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY|SUPABASE_SECRET_KEY)=$' .env.local   # expect no output
-```
-
-Step 5 depends on the pinned CLI from Step 6 — if `yarn supabase` is not yet available, do Step 6 first.
-
-- [ ] **Step 6: Pin the Supabase CLI**
-
-The global binary is 2.78.1 and **cannot parse this repo's `config.toml`** (it rejects `experimental.pgdelta` and `config.config.local_smtp`, both written by 2.109.1). Pinning makes `yarn supabase` deterministic.
-
-```bash
-yarn add -D supabase@2.109.1
-yarn supabase --version   # expect 2.109.1
 ```
 
 - [ ] **Step 7: Confirm nothing secret is staged**
@@ -770,7 +772,7 @@ Expected: at least 5.
 
 - [ ] **Step 3: Confirm it is coverage-excluded**
 
-Already handled by `coveragePathIgnorePatterns` in Task 1. Verify the file is generated, type-only, and imported by no test.
+Already handled by `coveragePathIgnorePatterns` in Task 2. Verify the file is generated, type-only, and imported by no test.
 
 - [ ] **Step 4: Commit**
 
@@ -1452,13 +1454,13 @@ describe("catalogue RLS policies", () => {
     expect(error?.code).toBe("42501")
   })
 
-  it("rejects an anon delete", async () => {
-    const { error, count } = await anon
-      .from("stores")
-      .delete({ count: "exact" })
-      .eq("slug", "siam-spice")
+  it("rejects an anon delete, leaving the row intact", async () => {
+    await anon.from("stores").delete().eq("slug", "siam-spice")
 
-    expect(error === null ? count : 0).toBe(0)
+    // With no delete policy, Postgres reports no error but removes nothing.
+    // Surviving the attempt is the assertion that matters.
+    const { data } = await admin.from("stores").select("slug").eq("slug", "siam-spice")
+    expect(data).toHaveLength(1)
   })
 
   it("hides inactive stores from anon but not from the service role", async () => {
