@@ -8,8 +8,9 @@ import { requireValue } from './env'
 /**
  * Admin client using the service role. Bypasses RLS.
  *
- * The only file permitted to reference SUPABASE_SECRET_KEY. Never import this
- * into a Client Component or anything reachable from the browser bundle.
+ * The only application file permitted to reference SUPABASE_SECRET_KEY. Never
+ * import this into a Client Component or anything reachable from the browser
+ * bundle.
  */
 export function createClient(): SupabaseClient<Database> {
   if (typeof window !== 'undefined') {

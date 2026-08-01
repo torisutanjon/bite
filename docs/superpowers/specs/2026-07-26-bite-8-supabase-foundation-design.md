@@ -147,7 +147,8 @@ Name-derived slugs mean **BITE-11 changes those hrefs**. Accepted deliberately o
 - **`server.ts`** — `createServerClient` + `next/headers` cookies; async factory.
 - **`client.ts`** — `createBrowserClient`.
 - **`service.ts`** — secret key; guarded so importing it from browser code throws. The only
-  file permitted to reference `SUPABASE_SECRET_KEY`.
+  application file permitted to reference `SUPABASE_SECRET_KEY` — test code may read it
+  directly to drive the live database.
 - **`middleware.ts`** — `updateSession` helper, **created but not wired**.
 
 **Deliberate boundary:** no root `middleware.ts`. Session refresh is auth behaviour and
@@ -191,7 +192,8 @@ No browser verification: this item renders nothing. Playwright evidence starts a
 - [ ] All four clients exist and type-check
 - [ ] `lib/types/supabase.ts` generated and committed
 - [ ] `.env.example` committed; `.env.local` gitignored and never committed
-- [ ] `SUPABASE_SECRET_KEY` referenced only in `lib/supabase/service.ts`
+- [ ] `SUPABASE_SECRET_KEY` referenced only in `lib/supabase/service.ts` (application code;
+      tests may read it to drive the live database)
 - [ ] A throwaway query against `stores` returns the seeded rows — pasted into the session note
 - [ ] Nothing in `app/` changes
 - [ ] Failing test first; gates hold (90 stmts / 85 branch / 95 funcs / 90 lines)

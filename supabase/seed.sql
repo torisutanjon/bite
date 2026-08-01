@@ -1,4 +1,6 @@
--- Cuisine tags. The five FilterSidebar offers are is_filterable; the rest are display-only.
+-- Cuisine tags. FilterSidebar offers five choices, but "All Cuisines" is a sentinel
+-- rather than a tag — so the four real cuisines behind it are is_filterable and the
+-- rest are display-only.
 insert into public.cuisine_tags (slug, label, emoji, is_filterable, sort_order) values
   ('burgers',   'Burgers',   '🍔', true,  1),
   ('sushi',     'Sushi',     '🍣', true,  2),

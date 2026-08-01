@@ -55,10 +55,14 @@ describe('catalogue RLS policies', () => {
   })
 
   it('rejects an anon delete, leaving the row intact', async () => {
-    await anon.from('stores').delete().eq('slug', 'siam-spice')
+    const { error } = await anon.from('stores').delete().eq('slug', 'siam-spice')
 
-    // With no delete policy, Postgres reports no error but removes nothing.
-    // Surviving the attempt is the assertion that matters.
+    // anon holds no DELETE privilege, so Postgres rejects on the table grant
+    // before any policy is evaluated. Assert both halves: the call is refused,
+    // and the row is still there afterwards.
+    expect(error).not.toBeNull()
+    expect(error?.code).toBe('42501')
+
     const { data } = await admin.from('stores').select('slug').eq('slug', 'siam-spice')
     expect(data).toHaveLength(1)
   })
