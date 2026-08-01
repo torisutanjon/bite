@@ -48,8 +48,8 @@ const supabase = await createClient();
 import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 
-// 3. Middleware (session refresh)
-import { updateSession } from "@/lib/supabase/middleware";
+// 3. Proxy (session refresh) — Next 16 renamed the middleware convention to proxy
+import { updateSession } from "@/lib/supabase/proxy";
 
 // 4. Admin operations (service role)
 import { createClient } from "@/lib/supabase/service";
@@ -442,7 +442,7 @@ lib/
     client.ts                     ← Client Component Supabase client
     server.ts                     ← Server Component Supabase client
     service.ts                    ← Admin (service role) client
-    middleware.ts                 ← Session refresh middleware
+    proxy.ts                      ← Session refresh helper (Next 16 renamed middleware → proxy)
   utils/
     provider.ts                   ← buildProviderTree() helper
     circuit-breaker.ts
