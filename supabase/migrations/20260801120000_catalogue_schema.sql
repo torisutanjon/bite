@@ -50,13 +50,16 @@ create table public.menu_categories (
   slug text not null,
   name text not null,
   sort_order integer not null default 0,
-  unique (store_id, slug)
+  unique (store_id, slug),
+  -- Redundant given the primary key, but a composite foreign key needs a unique
+  -- constraint on exactly the columns it targets. menu_items points here.
+  unique (id, store_id)
 );
 
 create table public.menu_items (
   id uuid primary key default gen_random_uuid(),
   store_id uuid not null references public.stores (id) on delete cascade,
-  category_id uuid not null references public.menu_categories (id) on delete cascade,
+  category_id uuid not null,
   name text not null,
   description text,
   price_cents integer not null check (price_cents >= 0),
@@ -64,7 +67,13 @@ create table public.menu_items (
   badge text,
   badge_color text,
   is_available boolean not null default true,
-  sort_order integer not null default 0
+  sort_order integer not null default 0,
+  -- store_id is denormalised so the menu can be read without joining categories.
+  -- Targeting (id, store_id) rather than just (id) makes the database reject an
+  -- item whose category belongs to a different store, instead of trusting writers.
+  foreign key (category_id, store_id)
+    references public.menu_categories (id, store_id)
+    on delete cascade
 );
 
 comment on column public.menu_items.badge is 'Presentation string ("POPULAR"). Presentation leaking into data; revisit if a promotions domain appears.';

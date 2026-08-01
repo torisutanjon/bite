@@ -135,11 +135,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "menu_items_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: "menu_items_category_id_store_id_fkey"
+            columns: ["category_id", "store_id"]
             isOneToOne: false
             referencedRelation: "menu_categories"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "store_id"]
           },
           {
             foreignKeyName: "menu_items_store_id_fkey"
