@@ -62,6 +62,39 @@ describe('updateSession', () => {
     expect(request.cookies.get('sb-token')?.value).toBe('refreshed')
   })
 
+  it('copies headers supplied by setAll onto the returned response', async () => {
+    // Supabase calls setAll from inside getUser(), which is the only path where
+    // the reassigned response actually reaches the caller.
+    mockedCreateServerClient.mockImplementationOnce((_url, _key, options) => ({
+      auth: {
+        getUser: jest.fn().mockImplementation(async () => {
+          options.cookies.setAll(
+            [{ name: 'sb-token', value: 'refreshed', options: { path: '/' } }],
+            { 'x-supabase-test': 'applied' }
+          )
+          return { data: { user: null } }
+        }),
+      },
+    }))
+
+    const response = await updateSession(new NextRequest('http://localhost:3000/stores'))
+
+    expect(response.headers.get('x-supabase-test')).toBe('applied')
+    expect(response.cookies.get('sb-token')?.value).toBe('refreshed')
+  })
+
+  it('tolerates setAll being called without headers', async () => {
+    const request = new NextRequest('http://localhost:3000/stores')
+
+    await updateSession(request)
+    const { cookies: handlers } = mockedCreateServerClient.mock.calls[0][2]
+
+    expect(() =>
+      handlers.setAll([{ name: 'sb-token', value: 'no-headers', options: {} }])
+    ).not.toThrow()
+    expect(request.cookies.get('sb-token')?.value).toBe('no-headers')
+  })
+
   it('throws a named error when the url is missing', async () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL
     const request = new NextRequest('http://localhost:3000/stores')
