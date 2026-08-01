@@ -10,9 +10,11 @@
     "lint": "eslint",
     "prettier:fix": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "jest --selectProjects unit",
+    "test:watch": "jest --selectProjects unit --watch",
+    "test:coverage": "jest --selectProjects unit --coverage",
+    "test:db": "jest --selectProjects db",
+    "test:all": "jest",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "jest": "^30.4.2",
